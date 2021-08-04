@@ -1,0 +1,8 @@
+README.md
+setup.py
+annotations/__init__.py
+annotations/component.py
+pydi.egg-info/PKG-INFO
+pydi.egg-info/SOURCES.txt
+pydi.egg-info/dependency_links.txt
+pydi.egg-info/top_level.txt
