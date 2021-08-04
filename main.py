@@ -1,4 +1,4 @@
-from annotations import Bean, Autowired, AppInitilizer
+from cndi.annotations import Bean, Autowired, AppInitilizer
 
 class TestBean:
     def __init__(self, name):

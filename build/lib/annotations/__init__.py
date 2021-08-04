@@ -1,4 +1,4 @@
-from annotations.component import ComponentClass
+from cndi.annotations import ComponentClass
 
 beans = list()
 autowires = list()
@@ -6,7 +6,7 @@ components = list()
 beanStore = dict()
 componentStore = dict()
 
-from functools import wraps, partial
+from functools import wraps
 import importlib
 import copy
 

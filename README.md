@@ -5,7 +5,7 @@
 # Example    
 Follow the below code to simplify understanding, or can also refer to [main.py](main.py)
     
-    from annotations import Bean, Autowired, AppInitilizer
+    from cndi.annotations import Bean, Autowired, AppInitilizer
     
     class TestBean:
         def __init__(self, name):
