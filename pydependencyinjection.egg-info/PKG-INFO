@@ -1,0 +1,41 @@
+Metadata-Version: 2.1
+Name: pydependencyinjection
+Version: 0.0.1
+Summary: UNKNOWN
+Home-page: UNKNOWN
+Author: Mayank Shinde
+Author-email: mayank31313@gmail.com
+License: UNKNOWN
+Description: 
+        Follow the below code to simplify understanding, or can also refer to [main.py](main.py)
+            
+            from annotations import Bean, Autowired, AppInitilizer
+            
+            class TestBean:
+                def __init__(self, name):
+                    self.name = name
+            
+            
+            @Bean()
+            def getTestBean() -> TestBean:
+                return TestBean("Test 123")
+            
+            testBean = None
+            
+            app = AppInitilizer()
+            if __name__ == "__main__":
+                @Autowired()
+                def setTestBean(bean: TestBean):
+                    global testBean
+                    testBean = bean
+            
+                app.run()
+            
+                print(testBean.name)
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: BSD 3-Clause License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
