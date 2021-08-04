@@ -1,8 +1,0 @@
-README.md
-setup.py
-annotations/__init__.py
-annotations/component.py
-pydependencyinjection.egg-info/PKG-INFO
-pydependencyinjection.egg-info/SOURCES.txt
-pydependencyinjection.egg-info/dependency_links.txt
-pydependencyinjection.egg-info/top_level.txt
