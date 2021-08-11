@@ -11,13 +11,13 @@ def getTestBean() -> TestBean:
 
 testBean = None
 
+@Autowired()
+def setTestBean(bean: TestBean):
+    global testBean
+    testBean = bean
+
 app = AppInitilizer()
 if __name__ == "__main__":
-    @Autowired()
-    def setTestBean(bean: TestBean):
-        global testBean
-        testBean = bean
-
     app.run()
-
     print(testBean.name)
+    print(type(testBean))
