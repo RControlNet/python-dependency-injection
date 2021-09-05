@@ -100,7 +100,6 @@ def Bean(newInstance=False):
             'kwargs': annotations,
             'index': len(beans)
         })
-
         return wrapper
 
     return inner_function
@@ -156,6 +155,9 @@ def workOrder(beans):
     assert len(beanQueue) == len(beans), "Somebeans were not initialized properly"
     return list(sorted(beanQueue, key=lambda x: x['index']))
 
+def dirModuleFilter(module, filt = lambda y: True):
+    return filter(lambda x: not x.startswith('__') and filt(x), dir(module))
+
 def walkDir(path):
     pythonFilesInComponent = list()
 
@@ -164,10 +166,18 @@ def walkDir(path):
     return pythonFilesInComponent
 
 def walkChild(module):
-    pythonComponents = set(list(map(lambda x: module.__name__ + x ,walkDir(os.path.dirname(module.__spec__.origin)))))
-    print(pythonComponents, module.__spec__.origin)
+    pythonComponents = set(list(map(lambda x: module.__name__ + x ,walkDir(module.__spec__.submodule_search_locations[0]))))
     return pythonComponents
 
+def importSubModules(module, skipModules=[], callback=None):
+    for m in walkChild(module):
+        if len(list(filter(lambda x: m.startswith(x), skipModules))) > 0:
+            print("Skipping ImportModule:", m)
+            continue
+        print("Importing:", m)
+        moduleInstance = importlib.import_module(m)
+        if callback is not None:
+            callback(moduleInstance)
 
 class AppInitilizer:
     def __init__(self):
@@ -175,16 +185,16 @@ class AppInitilizer:
 
     def componentScan(self, module):
         importModule = importlib.import_module(module)
-        self.componentsPath.extend(walkChild(importModule))
+        self.componentsPath.append(importModule)
+
 
     def run(self):
         global autowires
-        workOrderBeans = workOrder(beans)
         for module in self.componentsPath:
-            importlib.import_module(module)
+            importSubModules(module)
 
+        workOrderBeans = workOrder(beans)
 
-        print(list(map(lambda x: x['name'], workOrderBeans)))
 
         for bean in workOrderBeans:
             print("Registering Bean", bean['fullname'])
@@ -197,7 +207,6 @@ class AppInitilizer:
             beanStore[bean['name']] = bean
 
         for component in components:
-            print(component.getInnerAutowiredClasses(autowires)[0])
             componentStore[component.fullname] = component
             beanStore[component.fullname] = component.func()
 
