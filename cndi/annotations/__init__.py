@@ -1,4 +1,5 @@
 from cndi.annotations.component import ComponentClass
+import os
 
 beans = list()
 autowires = list()
@@ -10,10 +11,12 @@ from functools import wraps
 import importlib
 import copy
 
+
 def importModuleName(fullname):
     modules = fullname.split('.')
     module = importlib.import_module(modules[-1], package='.'.join(modules[:-1]))
     return module
+
 
 def getBeanObject(objectType):
     bean = beanStore[objectType]
@@ -22,6 +25,7 @@ def getBeanObject(objectType):
     #     args[key] = objectInstance()
     # else:
     return copy.deepcopy(objectInstance) if bean['newInstance'] else objectInstance
+
 
 class AutowiredClass:
     def __init__(self, required, func, kwargs: dict()):
@@ -56,7 +60,9 @@ class AutowiredClass:
             self.func(**args)
 
     def calculateDependencies(self):
-        return list(map(lambda dependency: '.'.join([dependency.__module__, dependency.__name__]), self.kwargs.values()))
+        return list(
+            map(lambda dependency: '.'.join([dependency.__module__, dependency.__name__]), self.kwargs.values()))
+
 
 def Component(func: object):
     annotations = func.__annotations__
@@ -73,6 +79,7 @@ def Component(func: object):
 
     return wrapper
 
+
 def Bean(newInstance=False):
     def inner_function(func):
         annotations = func.__annotations__
@@ -83,37 +90,43 @@ def Bean(newInstance=False):
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
 
-        annotations = dict(map(lambda key: (key , '.'.join([annotations[key].__module__ , annotations[key].__qualname__])), annotations))
+        annotations = dict(
+            map(lambda key: (key, '.'.join([annotations[key].__module__, annotations[key].__qualname__])), annotations))
         beans.append({
             'name': '.'.join([returnType.__module__, returnType.__name__]),
             'newInstance': newInstance,
             'object': wrapper,
             'fullname': wrapper.__qualname__,
-            'kwargs':  annotations,
+            'kwargs': annotations,
             'index': len(beans)
         })
 
         return wrapper
+
     return inner_function
 
 
 def Autowired(required=True):
     def inner_function(func: object):
         annotations = func.__annotations__
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
 
-        autowires.append(AutowiredClass(required=required,**{
+        autowires.append(AutowiredClass(required=required, **{
             'kwargs': annotations,
             'func': wrapper
         }))
 
         return wrapper
+
     return inner_function
+
 
 def getBean(beans, name):
     return list(filter(lambda x: x['name'] == name, beans))[0]
+
 
 def workOrder(beans):
     allBeanNames = list(map(lambda bean: bean['name'], beans))
@@ -143,11 +156,36 @@ def workOrder(beans):
     assert len(beanQueue) == len(beans), "Somebeans were not initialized properly"
     return list(sorted(beanQueue, key=lambda x: x['index']))
 
+def walkDir(path):
+    pythonFilesInComponent = list()
+
+    for (root, dirs, files) in os.walk(path, topdown=path):
+        pythonFilesInComponent.extend(map(lambda x: '.'.join([root[path.__len__():].replace('\\', '.'),x[:-3]]),filter(lambda x: x.endswith(".py"), files)))
+    return pythonFilesInComponent
+
+def walkChild(module):
+    pythonComponents = set(list(map(lambda x: module.__name__ + x ,walkDir(os.path.dirname(module.__spec__.origin)))))
+    print(pythonComponents, module.__spec__.origin)
+    return pythonComponents
+
+
 class AppInitilizer:
+    def __init__(self):
+        self.componentsPath = list()
+
+    def componentScan(self, module):
+        importModule = importlib.import_module(module)
+        self.componentsPath.extend(walkChild(importModule))
+
     def run(self):
         global autowires
         workOrderBeans = workOrder(beans)
+        for module in self.componentsPath:
+            importlib.import_module(module)
+
+
         print(list(map(lambda x: x['name'], workOrderBeans)))
+
         for bean in workOrderBeans:
             print("Registering Bean", bean['fullname'])
             kwargs = dict()

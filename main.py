@@ -1,13 +1,5 @@
 from cndi.annotations import Bean, Autowired, AppInitilizer
-
-class TestBean:
-    def __init__(self, name):
-        self.name = name
-
-
-@Bean()
-def getTestBean() -> TestBean:
-    return TestBean("Test 123")
+from test_module.TestBean import TestBean
 
 testBean = None
 
@@ -18,6 +10,7 @@ def setTestBean(bean: TestBean):
 
 app = AppInitilizer()
 if __name__ == "__main__":
+    app.componentScan("test_module")
     app.run()
     print(testBean.name)
     print(type(testBean))
