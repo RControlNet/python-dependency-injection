@@ -1,5 +1,5 @@
+from cndi.utils import *
 from cndi.annotations.component import ComponentClass
-import os
 
 beans = list()
 autowires = list()
@@ -122,7 +122,6 @@ def Autowired(required=True):
 
     return inner_function
 
-
 def getBean(beans, name):
     return list(filter(lambda x: x['name'] == name, beans))[0]
 
@@ -155,29 +154,7 @@ def workOrder(beans):
     assert len(beanQueue) == len(beans), "Somebeans were not initialized properly"
     return list(sorted(beanQueue, key=lambda x: x['index']))
 
-def dirModuleFilter(module, filt = lambda y: True):
-    return filter(lambda x: not x.startswith('__') and filt(x), dir(module))
 
-def walkDir(path):
-    pythonFilesInComponent = list()
-
-    for (root, dirs, files) in os.walk(path, topdown=path):
-        pythonFilesInComponent.extend(map(lambda x: '.'.join([root[path.__len__():].replace('\\', '.'),x[:-3]]),filter(lambda x: x.endswith(".py"), files)))
-    return pythonFilesInComponent
-
-def walkChild(module):
-    pythonComponents = set(list(map(lambda x: module.__name__ + x ,walkDir(module.__spec__.submodule_search_locations[0]))))
-    return pythonComponents
-
-def importSubModules(module, skipModules=[], callback=None):
-    for m in walkChild(module):
-        if len(list(filter(lambda x: m.startswith(x), skipModules))) > 0:
-            print("Skipping ImportModule:", m)
-            continue
-        print("Importing:", m)
-        moduleInstance = importlib.import_module(m)
-        if callback is not None:
-            callback(moduleInstance)
 
 class AppInitilizer:
     def __init__(self):

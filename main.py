@@ -7,6 +7,7 @@ testBean = None
 @Autowired()
 def setTestBean(bean: TestBean):
     global testBean
+    print(bean)
     testBean = bean
 
 
