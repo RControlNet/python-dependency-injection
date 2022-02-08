@@ -1,11 +1,13 @@
 import setuptools
 
+VERSION = "1.0.0"
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="cndi",
-    version="0.0.2",
+    version=VERSION,
     author="Mayank Shinde",
     author_email="mayank31313@gmail.com",
     description="",

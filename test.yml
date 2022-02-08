@@ -1,0 +1,8 @@
+test:
+  hello: world
+
+mini:
+  world:
+    sense: true
+    is:
+      awesome: ${test.hello}

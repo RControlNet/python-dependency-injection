@@ -2,6 +2,18 @@ import os
 import importlib
 from importlib._bootstrap_external import _NamespacePath
 
+def injectEnvAsDict(dictObject, parent=""):
+    for (key,value) in dictObject.items():
+        if isinstance(value, dict):
+            injectEnvAsDict(value, key + ".")
+        elif isinstance(value, list) or isinstance(value, set) or isinstance(value, tuple):
+             raise NotImplementedError("Value of type: %s object cannot be list, set or tuple" % (type(value)))
+        else:
+            injectEnvAsKeyValue(key, value)
+
+def injectEnvAsKeyValue(key, value):
+    if key not in os.environ:
+        os.environ[key] = value
 
 def dirModuleFilter(module, filt = lambda y: True):
     return filter(lambda x: not x.startswith('__') and filt(x), dir(module))
