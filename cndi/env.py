@@ -43,6 +43,3 @@ def getContextEnvironment(key: str):
     if key in envDict:
         return envDict[key]
     return None
-
-loadEnvFromFile("../test.yml")
-print(getContextEnvironments())
