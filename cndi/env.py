@@ -7,7 +7,6 @@ def addToOsEnviron(key: str, value):
     if not key.startswith("."):
         key = '.' + key
     os.environ[(RCN_ENVS_CONFIG+key).upper()] = str(value)
-    print(os.environ[RCN_ENVS_CONFIG+key])
 
 def walkDictKey(parent, parent_label=''):
     responseList = list()
