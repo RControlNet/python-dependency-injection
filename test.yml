@@ -1,5 +1,6 @@
 test:
   hello: world
+  buddy: there
 
 mini:
   world:

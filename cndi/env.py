@@ -14,8 +14,8 @@ def walkDictKey(parent, parent_label=''):
         if isinstance(value, dict):
             responseList.extend(walkDictKey(value, parent_label + '.' + key))
         else:
-            parent_label += '.'+ key
-            responseList.append([parent_label, value])
+            parent_label + '.'+ key
+            responseList.append([parent_label + '.'+ key, value])
 
     return responseList
 
@@ -29,7 +29,7 @@ def loadEnvFromFile(property_file):
         for key, value in envData:
             addToOsEnviron(key, value)
 
-def getContextEnviroments():
+def getContextEnvironments():
     return dict(
         map(
             lambda items: [items[0][RCN_ENVS_CONFIG.__len__()+1:].lower(), items[1]],
@@ -38,8 +38,11 @@ def getContextEnviroments():
     )
 
 def getContextEnvironment(key: str):
-    envDict = getContextEnviroments()
+    envDict = getContextEnvironments()
     key = key.lower()
     if key in envDict:
         return envDict[key]
     return None
+
+loadEnvFromFile("../test.yml")
+print(getContextEnvironments())
