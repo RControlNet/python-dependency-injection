@@ -1,7 +1,10 @@
-from yaml import load, SafeLoader
+from yaml import load, SafeLoader, load_all
 import os
 
 RCN_ENVS_CONFIG = 'RCN_ENVS_CONFIG'
+if f"{RCN_ENVS_CONFIG}.active.profile" not in os.environ:
+    os.environ[f"{RCN_ENVS_CONFIG}.active.profile"] = "default"
+
 
 def addToOsEnviron(key: str, value):
     if not key.startswith("."):
@@ -24,7 +27,12 @@ def loadEnvFromFile(property_file):
         raise FileNotFoundError(f"Environment file does not exists at {property_file}")
 
     with open(property_file, "r") as stream:
-        data = load(stream, SafeLoader)
+        data = list(load_all(stream, SafeLoader))
+        if len(data) == 1:
+            data = data[0]
+        else:
+            dataDict = dict(map(lambda x: (x['rcn.profile'], x), data))
+            data = dataDict[os.environ[f"{RCN_ENVS_CONFIG}.active.profile"]]
         envData = walkDictKey(data)
         for key, value in envData:
             addToOsEnviron(key, value)

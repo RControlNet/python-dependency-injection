@@ -1,0 +1,25 @@
+rcn.profile: test
+
+test:
+  hello: world
+  buddy: there
+
+mini:
+  world:
+    sense: true
+    is:
+      awesome: ${test.hello}
+
+---
+
+rcn.profile: test2
+
+test:
+  hello: world
+  buddy: there
+
+mini:
+  world:
+    sense: true
+    is:
+      awesome: ${test.hello}

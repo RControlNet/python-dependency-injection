@@ -1,9 +1,0 @@
-test:
-  hello: world
-  buddy: there
-
-mini:
-  world:
-    sense: true
-    is:
-      awesome: ${test.hello}
