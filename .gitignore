@@ -1,0 +1,17 @@
+cndi/__pycache__/__init__.cpython-36.pyc
+cndi/__pycache__/env.cpython-36.pyc
+cndi/__pycache__/utils.cpython-36.pyc
+cndi/__pycache__/utils.cpython-38.pyc
+cndi/annotations/__pycache__/__init__.cpython-36.pyc
+cndi/annotations/__pycache__/component.cpython-36.pyc
+cndi/exception/__pycache__/
+cndi/http/__pycache__/
+test_module/__pycache__/TestBean.cpython-36.pyc
+test_module/__pycache__/TestModule.cpython-36.pyc
+tests/__pycache__/
+tests/cndi/__pycache__/
+tests/cndi/annotations/__pycache__/
+
+
+dist
+build
