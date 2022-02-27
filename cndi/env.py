@@ -1,4 +1,4 @@
-from yaml import load, SafeLoader, load_all
+from yaml import SafeLoader, load_all
 import os
 
 RCN_ENVS_CONFIG = 'RCN_ENVS_CONFIG'
