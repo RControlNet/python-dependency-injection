@@ -9,9 +9,13 @@ mini:
     sense: true
     is:
       awesome: ${test.hello}
+  listData:
+    - name: worldme
+      page:
+        - default: 2
+    - name: thereitis
 
 ---
-
 rcn.profile: test2
 
 test:

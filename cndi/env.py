@@ -11,13 +11,26 @@ def addToOsEnviron(key: str, value):
         key = '.' + key
     os.environ[(RCN_ENVS_CONFIG+key).upper()] = str(value)
 
+def walkListKey(parent, parent_label=''):
+    responseList = list()
+    for i,value in enumerate(parent):
+        if isinstance(value, dict):
+            responseList.extend(walkDictKey(value, parent_label + '.#' + str(i)))
+        elif isinstance(value, list):
+            responseList.extend(walkListKey(value, parent_label + '.#' + str(i)))
+        else:
+            responseList.append([parent_label + '.#'+ str(i), value])
+
+    return responseList
+
 def walkDictKey(parent, parent_label=''):
     responseList = list()
     for key, value in parent.items():
         if isinstance(value, dict):
             responseList.extend(walkDictKey(value, parent_label + '.' + key))
+        elif isinstance(value, list):
+            responseList.extend(walkListKey(value, parent_label + '.' + key))
         else:
-            parent_label + '.'+ key
             responseList.append([parent_label + '.'+ key, value])
 
     return responseList
@@ -44,6 +57,11 @@ def getContextEnvironments():
             filter(lambda items: items[0].startswith(RCN_ENVS_CONFIG), os.environ.items())
         )
     )
+
+def getListTypeContextEnvironments():
+    rcn_envs = getContextEnvironments()
+    dataDict = dict(filter(lambda key: key[0].__contains__(".#"), rcn_envs.items()))
+    return dataDict
 
 def getContextEnvironment(key: str):
     envDict = getContextEnvironments()
