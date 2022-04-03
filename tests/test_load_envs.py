@@ -1,6 +1,6 @@
 import unittest
 import os
-from cndi.env import loadEnvFromFile, getContextEnvironment, getContextEnvironments, getListTypeContextEnvironments
+from cndi.env import loadEnvFromFile, getContextEnvironment
 
 
 class LoadEnv(unittest.TestCase):

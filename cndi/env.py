@@ -1,5 +1,10 @@
 from yaml import SafeLoader, load_all
 import os
+import logging
+
+logger = logging.getLogger(__name__)
+logger.logging.basicConfig(format=f'%(asctime)s - {__name__} -  %(levelname)s - %(message)s', level=logging.INFO)
+
 
 RCN_ENVS_CONFIG = 'RCN_ENVS_CONFIG'
 if f"{RCN_ENVS_CONFIG}.active.profile" not in os.environ:
@@ -9,7 +14,10 @@ if f"{RCN_ENVS_CONFIG}.active.profile" not in os.environ:
 def addToOsEnviron(key: str, value):
     if not key.startswith("."):
         key = '.' + key
-    os.environ[(RCN_ENVS_CONFIG+key).upper()] = str(value)
+    if (RCN_ENVS_CONFIG+key) not in os.environ:
+        os.environ[(RCN_ENVS_CONFIG+key)] = str(value)
+    else:
+        logger.warning(f"An env variable already exists with key={(RCN_ENVS_CONFIG+key)}")
 
 def walkListKey(parent, parent_label=''):
     responseList = list()
@@ -35,6 +43,13 @@ def walkDictKey(parent, parent_label=''):
 
     return responseList
 
+def loadEnvFromFiles(*files):
+    for file in files:
+        if not os.path.exists(file):
+            logger.info(f"Env file does not exist: {file}")
+            continue
+
+        loadEnvFromFile(file)
 def loadEnvFromFile(property_file):
     if(not os.path.exists(property_file)):
         raise FileNotFoundError(f"Environment file does not exists at {property_file}")
