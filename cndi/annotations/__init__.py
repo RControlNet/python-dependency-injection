@@ -1,5 +1,9 @@
+from cndi.env import loadEnvFromFile
 from cndi.utils import *
 from cndi.annotations.component import ComponentClass
+import logging
+
+logger = logging.getLogger(__name__)
 
 beans = list()
 autowires = list()
@@ -43,7 +47,7 @@ class AutowiredClass:
                 dependencyNotFound.append(dependency)
 
         if len(dependencyNotFound) > 0:
-            print("Skipping ", self.fullname)
+            logger.warning(f"Skipping {self.fullname}")
             assert not self.required, "Could not initialize " + self.fullname + " with beans " + str(
                 dependencyNotFound)
 
@@ -159,6 +163,11 @@ def workOrder(beans):
 class AppInitilizer:
     def __init__(self):
         self.componentsPath = list()
+        applicationYml = "resources/application.yml"
+        if os.path.exists(applicationYml):
+            logger.info(f"External Configuration found: {applicationYml}")
+            loadEnvFromFile(applicationYml)
+
 
     def componentScan(self, module):
         importModule = importlib.import_module(module)
@@ -174,7 +183,7 @@ class AppInitilizer:
 
 
         for bean in workOrderBeans:
-            print("Registering Bean", bean['fullname'])
+            logger.info(f"Registering Bean {bean['fullname']}")
             kwargs = dict()
             for key, className in bean['kwargs'].items():
                 tempBean = beanStore[className]

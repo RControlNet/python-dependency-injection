@@ -3,7 +3,6 @@ import os
 import logging
 
 logger = logging.getLogger(__name__)
-logger.logging.basicConfig(format=f'%(asctime)s - {__name__} -  %(levelname)s - %(message)s', level=logging.INFO)
 
 
 RCN_ENVS_CONFIG = 'RCN_ENVS_CONFIG'
