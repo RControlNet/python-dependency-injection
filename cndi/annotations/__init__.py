@@ -1,5 +1,3 @@
-from cndi.env import loadEnvFromFile
-from cndi.utils import *
 from cndi.annotations.component import ComponentClass
 import logging
 
@@ -24,7 +22,7 @@ def importModuleName(fullname):
 
 def getBeanObject(objectType):
     bean = beanStore[objectType]
-    objectInstance = bean['object']
+    objectInstance = bean['objectInstance']
     # if (objectInstance.__class__.__name__ == "function"):
     #     args[key] = objectInstance()
     # else:
@@ -69,19 +67,18 @@ class AutowiredClass:
 
 
 def Component(func: object):
-    annotations = func.__annotations__
+    annotations = {}
 
     @wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
 
     components.append(ComponentClass(**{
-        'fullname': wrapper.__qualname__,
+        'fullname': '.'.join([wrapper.__module__,wrapper.__qualname__]),
         'func': wrapper,
-        'args': annotations
+        'annotations': annotations
     }))
-
-    return wrapper
+    return  wrapper
 
 
 def Bean(newInstance=False):
@@ -159,42 +156,3 @@ def workOrder(beans):
     return list(sorted(beanQueue, key=lambda x: x['index']))
 
 
-
-class AppInitilizer:
-    def __init__(self):
-        self.componentsPath = list()
-        applicationYml = "resources/application.yml"
-        if os.path.exists(applicationYml):
-            logger.info(f"External Configuration found: {applicationYml}")
-            loadEnvFromFile(applicationYml)
-
-
-    def componentScan(self, module):
-        importModule = importlib.import_module(module)
-        self.componentsPath.append(importModule)
-
-
-    def run(self):
-        global autowires
-        for module in self.componentsPath:
-            importSubModules(module)
-
-        workOrderBeans = workOrder(beans)
-
-
-        for bean in workOrderBeans:
-            logger.info(f"Registering Bean {bean['fullname']}")
-            kwargs = dict()
-            for key, className in bean['kwargs'].items():
-                tempBean = beanStore[className]
-                kwargs[key] = copy.deepcopy(tempBean['object']) if tempBean['newInstance'] else tempBean['object']
-
-            bean['object'] = bean['object'](**kwargs)
-            beanStore[bean['name']] = bean
-
-        for component in components:
-            componentStore[component.fullname] = component
-            beanStore[component.fullname] = component.func()
-
-        for autowire in autowires:
-            autowire.dependencyInject()

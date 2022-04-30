@@ -1,6 +1,7 @@
 import unittest
 
-from cndi.annotations import Autowired, AppInitilizer
+from cndi.annotations import Autowired
+from cndi.initializers import AppInitilizer
 from test_module.TestBean import TestBean
 
 

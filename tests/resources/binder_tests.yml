@@ -1,0 +1,14 @@
+rcn:
+  binders:
+    message:
+      enable: true
+      default: mqtt
+      brokerUrl: localhost
+      brokerPort: 1883
+      mqtt:
+        producer:
+          default-channel-output:
+            destination: new-topic
+        consumer:
+          default-channel-input:
+            destination: new-topic

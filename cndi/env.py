@@ -9,12 +9,14 @@ RCN_ENVS_CONFIG = 'RCN_ENVS_CONFIG'
 if f"{RCN_ENVS_CONFIG}.active.profile" not in os.environ:
     os.environ[f"{RCN_ENVS_CONFIG}.active.profile"] = "default"
 
+VARS = dict(map(lambda key: (key,os.environ[key]), filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ)))
+
 
 def addToOsEnviron(key: str, value):
     if not key.startswith("."):
         key = '.' + key
-    if (RCN_ENVS_CONFIG+key) not in os.environ:
-        os.environ[(RCN_ENVS_CONFIG+key)] = str(value)
+    if (RCN_ENVS_CONFIG+key) not in VARS:
+        VARS[(RCN_ENVS_CONFIG+key)] = str(value)
     else:
         logger.warning(f"An env variable already exists with key={(RCN_ENVS_CONFIG+key)}")
 
@@ -59,7 +61,7 @@ def loadEnvFromFile(property_file):
             data = data[0]
         else:
             dataDict = dict(map(lambda x: (x['rcn.profile'], x), data))
-            data = dataDict[os.environ[f"{RCN_ENVS_CONFIG}.active.profile"]]
+            data = dataDict[VARS[f"{RCN_ENVS_CONFIG}.active.profile"]]
         envData = walkDictKey(data)
         for key, value in envData:
             addToOsEnviron(key, value)
@@ -68,7 +70,7 @@ def getContextEnvironments():
     return dict(
         map(
             lambda items: [items[0][RCN_ENVS_CONFIG.__len__()+1:].lower(), items[1]],
-            filter(lambda items: items[0].startswith(RCN_ENVS_CONFIG), os.environ.items())
+            filter(lambda items: items[0].startswith(RCN_ENVS_CONFIG), VARS.items())
         )
     )
 
@@ -77,9 +79,13 @@ def getListTypeContextEnvironments():
     dataDict = dict(filter(lambda key: key[0].__contains__(".#"), rcn_envs.items()))
     return dataDict
 
-def getContextEnvironment(key: str):
+def getContextEnvironment(key: str, defaultValue = None, castFunc = None, required=False):
     envDict = getContextEnvironments()
     key = key.lower()
     if key in envDict:
+        if castFunc is not None:
+            return castFunc(envDict[key])
         return envDict[key]
-    return None
+    if required:
+        raise KeyError(f"Environment Variable with Key: {key} not found")
+    return defaultValue
