@@ -30,7 +30,6 @@ class MessageChannel:
 def Input(channelName):
     def inner_function(func):
         CHANNELS_TO_FUNC_MAP[channelName] = dict(func=func, annotations=func.__annotations__, is_sink=False)
-        print(CHANNELS_TO_FUNC_MAP)
         @wraps(func)
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
@@ -60,7 +59,7 @@ class DefaultMessageBinder:
         self.initializeBinders()
 
     def extractChannelNameFromPropertyKey(self, key):
-        matches = re.match("rcn.binders.message.(?P<defaultBinder>[a-z]+).(?P<binderType>(\w)+).(?P<channelName>[a-z\-]+).destination", key.lower())
+        matches = re.match("rcn.binders.message.(?P<defaultBinder>[a-z]+).(?P<binderType>(\w)+).(?P<channelName>[a-z\-]+).[destination|property]", key.lower())
         if matches is not None:
             return matches.groupdict()['channelName']
         return None
