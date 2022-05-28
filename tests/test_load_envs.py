@@ -8,7 +8,8 @@ from cndi.env import loadEnvFromFile, getContextEnvironment, VARS
 class LoadEnvTest(unittest.TestCase):
     def setUp(self) -> None:
         VARS.clear()
-        VARS[f"{RCN_ENVS_CONFIG}.active.profile"] = "test"
+        VARS[f"{RCN_ENVS_CONFIG}.active.profile".lower()] = "test"
+
 
     def testloadEnvFromFile(self):
         loadEnvFromFile("tests/resources/test.yml")

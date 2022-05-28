@@ -1,5 +1,6 @@
+from torch.distributed.argparse_util import env
 from yaml import SafeLoader, load_all
-import os
+import os, re
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,8 +10,7 @@ RCN_ENVS_CONFIG = 'RCN_ENVS_CONFIG'
 if f"{RCN_ENVS_CONFIG}.active.profile" not in os.environ:
     os.environ[f"{RCN_ENVS_CONFIG}.active.profile"] = "default"
 
-VARS = dict(map(lambda key: (key,os.environ[key]), filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ)))
-
+VARS = dict(map(lambda key: (key.lower(),os.environ[key]), filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ)))
 
 def addToOsEnviron(key: str, value):
     if not key.startswith("."):
@@ -51,17 +51,18 @@ def loadEnvFromFiles(*files):
             continue
 
         loadEnvFromFile(file)
+
 def loadEnvFromFile(property_file):
     if(not os.path.exists(property_file)):
         raise FileNotFoundError(f"Environment file does not exists at {property_file}")
 
     with open(property_file, "r") as stream:
-        data = list(load_all(stream, SafeLoader))
+        data = list(map(lambda x: normalize(x), load_all(stream, SafeLoader)))
         if len(data) == 1:
             data = data[0]
         else:
-            dataDict = dict(map(lambda x: (x['rcn.profile'], x), data))
-            data = dataDict[VARS[f"{RCN_ENVS_CONFIG}.active.profile"]]
+            dataDict = dict(map(lambda x: (x['rcn']['profile'], x), data))
+            data = dataDict[VARS[f"{RCN_ENVS_CONFIG}.active.profile".lower()]]
         envData = walkDictKey(data)
         for key, value in envData:
             addToOsEnviron(key, value)
@@ -89,3 +90,47 @@ def getContextEnvironment(key: str, defaultValue = None, castFunc = None, requir
     if required:
         raise KeyError(f"Environment Variable with Key: {key} not found")
     return defaultValue
+
+def constructDictWithValues(value, keys=[]):
+    if len(keys) == 1:
+        return {
+            keys[0]: value
+        }
+    else:
+        return {
+            keys[0]: constructDictWithValues(value, keys[1:])
+        }
+
+def constructDict(value, generatedObject, key=''):
+    tempDict = generatedObject
+    keys = key.split('.')
+    for i, key in enumerate(keys):
+        if key == "":
+            continue
+
+        if key in tempDict:
+            tempDict = tempDict[key]
+        else:
+            tempDict.update(constructDictWithValues(value, keys[i:]))
+            break
+
+def normalize(dictObject: dict, key = ''):
+    envData = walkDictKey(dictObject)
+    envData = sorted(envData, key = lambda data: data[0])
+
+    generatedDict = dict()
+    for key, value in envData:
+        searchResult = re.findall("\${[a-z0-9A-Z\\_]+}", str(value))
+        for result in searchResult:
+            groupValue = re.match("\${(?P<envName>[a-z0-9A-Z\\_]+)}", result).group('envName')
+            if groupValue.startswith(RCN_ENVS_CONFIG) and groupValue in VARS:
+                envValue = VARS[groupValue]
+            elif groupValue in os.environ:
+                envValue = os.environ[groupValue]
+            else:
+                raise ValueError(f"Environment Variable not found {groupValue}")
+            value = value.replace(result, envValue)
+
+        constructDict(value, generatedDict, key)
+
+    return generatedDict

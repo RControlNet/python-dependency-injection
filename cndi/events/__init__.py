@@ -22,11 +22,12 @@ class EventHandler(threading.Thread):
         self.logger.debug(f"Expected Invoker Time set to {self.expectedInvokerTime} seconds")
         self.logger.debug(f"Sleep time set to {self.sleepwait} seconds")
 
-    def registerEvent(self, event_name, event_handler, event_object, event_invoker):
-        self.EVENTS_MAP[event_name] = Event(event_name, event_handler, event_object,event_invoker)
+    def registerEvent(self, event: Event):
+        self.EVENTS_MAP[event.event_name] = event
 
     def run(self) -> None:
-        while True:
+        enabled = getContextEnvironment("rcn.events.enable", defaultValue=False, castFunc=bool)
+        while enabled:
             for event_name in self.EVENTS_MAP:
                 event = self.EVENTS_MAP[event_name]
                 try:
@@ -36,7 +37,7 @@ class EventHandler(threading.Thread):
                     timeDiff = time.time() - start
                     if timeDiff > self.expectedInvokerTime:
                         self.logger.warning(f"Time exceed for event invoker: {timeDiff} secs")
-                    if callEvent is not None:
+                    if callEvent is not None and 'trigger' in callEvent and callEvent['trigger']:
                         responseObject = event.event_handler(callEvent, event.event_object)
                         if responseObject is not None:
                             event.event_object = responseObject
