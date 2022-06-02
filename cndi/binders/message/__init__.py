@@ -74,6 +74,7 @@ class DefaultMessageBinder:
                 binder = self.binders[channelName]
                 method = methodWrapper['func']
                 methodsClassFullname = f"{method.__module__}.{method.__qualname__.split('.')[0]}"
+                self.logger.info(f"Performing Injection: {methodsClassFullname}::{method}")
                 classBean = getBeanObject(methodsClassFullname)
                 method(classBean, binder)
 
@@ -86,13 +87,15 @@ class DefaultMessageBinder:
             brokerPort = getContextEnvironment("rcn.binders.message.brokerPort", required=True, castFunc=int)
 
             contextEnvs = getContextEnvironments()
-
+            mqttClient = Client()
 
             mqttProducerChannelBindings = filter(lambda key: key.startswith('rcn.binders.message.mqtt.producer'), contextEnvs)
             for propertyKey in mqttProducerChannelBindings:
                 channelName = self.extractChannelNameFromPropertyKey(propertyKey)
-                producerBinding = MqttProducerBinding()
+                producerBinding = MqttProducerBinding(mqttClient)
                 topicName = getContextEnvironment(propertyKey, required=True)
+                self.logger.info(f"Establishing Channel {channelName} to {topicName}")
+
                 producerBinding.setTopic(topicName)
                 CHANNELS_TO_TOPIC_MAP[channelName] = topicName
                 self.binders[channelName] = producerBinding
@@ -127,7 +130,6 @@ class DefaultMessageBinder:
             def on_message(client, userdata, msg: MQTTMessage):
                 self.topicConsumers[msg.topic](msg)
 
-            mqttClient = Client()
             mqttClient.on_connect = on_connect
             mqttClient.on_message = on_message
 

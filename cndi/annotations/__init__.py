@@ -1,7 +1,7 @@
 from cndi.annotations.component import ComponentClass
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("cndi.annotations")
 
 beans = list()
 autowires = list()
@@ -19,8 +19,13 @@ def importModuleName(fullname):
     module = importlib.import_module(modules[-1], package='.'.join(modules[:-1]))
     return module
 
-
+def normaliseModuleAndClassName(name):
+    nameList:list = name.split(".")
+    if "__init__" in nameList:
+        nameList.remove("__init__")
+    return '.'.join(nameList)
 def getBeanObject(objectType):
+    objectType = normaliseModuleAndClassName(objectType)
     bean = beanStore[objectType]
     objectInstance = bean['objectInstance']
     # if (objectInstance.__class__.__name__ == "function"):
@@ -32,7 +37,7 @@ def getBeanObject(objectType):
 class AutowiredClass:
     def __init__(self, required, func, kwargs: dict()):
         self.fullname = '.'.join([func.__qualname__])
-        self.className = '.'.join(func.__qualname__.split(".")[:-1])
+        self.className = normaliseModuleAndClassName('.'.join(func.__qualname__.split(".")[:-1]))
         self.func = func
         self.kwargs = kwargs
         self.required = required
@@ -52,18 +57,19 @@ class AutowiredClass:
         kwargs = self.kwargs
         args = dict()
         for (key, value) in kwargs.items():
-            fullName = '.'.join([value.__module__, value.__name__])
+            fullName = normaliseModuleAndClassName('.'.join([value.__module__, value.__name__]))
             if fullName in beanStore:
                 args[key] = getBeanObject(fullName)
 
         if self.className in beanStore:
             self.func(beanStore[self.className], **args)
         else:
+            print(self.className, self.fullname)
             self.func(**args)
 
     def calculateDependencies(self):
         return list(
-            map(lambda dependency: '.'.join([dependency.__module__, dependency.__name__]), self.kwargs.values()))
+            map(lambda dependency: normaliseModuleAndClassName('.'.join([dependency.__module__, dependency.__name__])), self.kwargs.values()))
 
 
 def Component(func: object):
@@ -73,11 +79,20 @@ def Component(func: object):
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
 
-    components.append(ComponentClass(**{
-        'fullname': '.'.join([wrapper.__module__,wrapper.__qualname__]),
-        'func': wrapper,
-        'annotations': annotations
-    }))
+    moduleName = wrapper.__module__[:-9] if wrapper.__module__.endswith(".__init__") else wrapper.__module__
+
+    componentFullName = '.'.join([moduleName,wrapper.__qualname__])
+
+    logger.info(f"Function name " + componentFullName)
+    duplicateComponents = list(filter(lambda component: component.fullname == componentFullName, components))
+    if duplicateComponents.__len__() > 0:
+        logger.info(f"Duplicate Component found for: {duplicateComponents}")
+    else:
+        components.append(ComponentClass(**{
+            'fullname': componentFullName,
+            'func': wrapper,
+            'annotations': annotations
+        }))
     return  wrapper
 
 
