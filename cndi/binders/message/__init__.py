@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 CHANNELS_TO_TOPIC_MAP = dict()
 CHANNELS_TO_FUNC_MAP = dict()
 
-
 class SubscriberChannel:
     def __call__(self, *args, **kwargs):
         self.callback(*args, **kwargs)
@@ -74,7 +73,6 @@ class DefaultMessageBinder:
                 binder = self.binders[channelName]
                 method = methodWrapper['func']
                 methodsClassFullname = f"{method.__module__}.{method.__qualname__.split('.')[0]}"
-                self.logger.info(f"Performing Injection: {methodsClassFullname}::{method}")
                 classBean = getBeanObject(methodsClassFullname)
                 method(classBean, binder)
 
@@ -94,7 +92,6 @@ class DefaultMessageBinder:
                 channelName = self.extractChannelNameFromPropertyKey(propertyKey)
                 producerBinding = MqttProducerBinding(mqttClient)
                 topicName = getContextEnvironment(propertyKey, required=True)
-                self.logger.info(f"Establishing Channel {channelName} to {topicName}")
 
                 producerBinding.setTopic(topicName)
                 CHANNELS_TO_TOPIC_MAP[channelName] = topicName
@@ -105,7 +102,6 @@ class DefaultMessageBinder:
 
             for propertyKey in mqttConsumerChannelBindings:
                 channelName = self.extractChannelNameFromPropertyKey(propertyKey)
-                self.logger.info(channelName)
                 if channelName not in CHANNELS_TO_FUNC_MAP:
                     self.logger.error(f"Channel not found: {channelName}")
                     continue
