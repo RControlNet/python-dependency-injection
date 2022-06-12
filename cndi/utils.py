@@ -1,6 +1,9 @@
 import os
 import importlib
 from importlib._bootstrap_external import _NamespacePath
+import logging
+
+logger = logging.getLogger("cndi.utils")
 
 def injectEnvAsDict(dictObject, parent=""):
     for (key,value) in dictObject.items():
@@ -36,9 +39,9 @@ def walkChild(module):
 def importSubModules(module, skipModules=[], callback=None):
     for m in walkChild(module):
         if len(list(filter(lambda x: m.startswith(x), skipModules))) > 0:
-            print("Skipping ImportModule:", m)
+            logger.warning(f"Skipping ImportModule: {m}")
             continue
-        print("Importing:", m)
+        logger.info(f"Importing: {m}")
         moduleInstance = importlib.import_module(m)
         if callback is not None:
             callback(moduleInstance)

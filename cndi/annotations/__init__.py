@@ -64,7 +64,7 @@ class AutowiredClass:
         if self.className in beanStore:
             self.func(beanStore[self.className], **args)
         else:
-            print(self.className, self.fullname)
+            logger.info(f"{self.className} {self.fullname}")
             self.func(**args)
 
     def calculateDependencies(self):
