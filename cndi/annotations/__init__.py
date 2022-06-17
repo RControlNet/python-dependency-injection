@@ -73,7 +73,6 @@ class AutowiredClass:
 
 
 def Component(func: object):
-    annotations = {}
 
     @wraps(func)
     def wrapper(*args, **kwargs):
