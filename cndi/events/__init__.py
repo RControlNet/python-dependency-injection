@@ -18,16 +18,22 @@ class EventHandler(threading.Thread):
         self.EVENTS_MAP = dict()
         self.sleepwait = getContextEnvironment("rcn.events.waittime", 2.0, float)
         self.expectedInvokerTime = getContextEnvironment("rcn.events.expected.invoker.time", 0.003, float)
-
+        self._enabled = getContextEnvironment("rcn.events.enable", defaultValue=False, castFunc=bool)
         self.logger.debug(f"Expected Invoker Time set to {self.expectedInvokerTime} seconds")
         self.logger.debug(f"Sleep time set to {self.sleepwait} seconds")
 
     def registerEvent(self, event: Event):
         self.EVENTS_MAP[event.event_name] = event
 
+    def triggerEventExplicit(self, eventName, **kwargs):
+        if eventName not in self.EVENTS_MAP or not self._enabled:
+            return None
+
+        eventObject:Event = self.EVENTS_MAP[eventName]
+        eventObject.event_handler(kwargs, None)
+
     def run(self) -> None:
-        enabled = getContextEnvironment("rcn.events.enable", defaultValue=False, castFunc=bool)
-        while enabled:
+        while self._enabled:
             for event_name in self.EVENTS_MAP:
                 event = self.EVENTS_MAP[event_name]
                 try:

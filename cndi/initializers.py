@@ -4,7 +4,7 @@ import os
 from cndi.binders.message import DefaultMessageBinder
 import logging
 
-from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires
+from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, getBean
 from cndi.env import loadEnvFromFile, getContextEnvironment
 from cndi.utils import importSubModules
 
@@ -42,10 +42,16 @@ class AppInitilizer:
 
         for component in components:
             componentStore[component.fullname] = component
-            beanStore[component.fullname] = dict(objectInstance=component.func(),
+            kwargs = constructKeyWordArguments(component.annotations)
+            objectInstance = component.func(**kwargs)
+            if 'postConstruct' in dir(objectInstance):
+                postConstructKArgs = constructKeyWordArguments(objectInstance.postConstruct.__annotations__)
+                objectInstance.postConstruct(**postConstructKArgs)
+
+            beanStore[component.fullname] = dict(objectInstance=objectInstance,
                                                  name=component.fullname,
-                                                 object=component.func, index=0, newInstance=False,
-                                                 fullname=component.func.__name__, kwargs=dict())
+                                                 object=objectInstance, index=0, newInstance=False,
+                                                 fullname=component.func.__name__, kwargs=kwargs)
 
         messageBinderEnabled = getContextEnvironment("rcn.binders.message.enable", defaultValue=False, castFunc=bool)
         if messageBinderEnabled:
@@ -54,3 +60,10 @@ class AppInitilizer:
 
         for autowire in autowires:
             autowire.dependencyInject()
+
+def constructKeyWordArguments(annotations):
+    kwargs = dict()
+    for key, classObject in annotations.items():
+        tempBean = beanStore[f"{classObject.__module__}.{classObject.__name__}"]
+        kwargs[key] = copy.deepcopy(tempBean['object']) if tempBean['newInstance'] else tempBean['object']
+    return kwargs
