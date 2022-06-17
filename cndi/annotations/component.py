@@ -4,6 +4,8 @@ class ComponentClass:
         self.func = func
         self.annotations = annotations
 
+        print(self.annotations)
+
     def getInnerAutowiredClasses(self, autowires):
         return list(filter(
             lambda autowire: autowire.className == self.fullname,

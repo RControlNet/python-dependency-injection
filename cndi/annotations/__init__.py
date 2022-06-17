@@ -80,9 +80,7 @@ def Component(func: object):
         return func(*args, **kwargs)
 
     moduleName = wrapper.__module__[:-9] if wrapper.__module__.endswith(".__init__") else wrapper.__module__
-
     componentFullName = '.'.join([moduleName,wrapper.__qualname__])
-
     logger.info(f"Function name " + componentFullName)
     duplicateComponents = list(filter(lambda component: component.fullname == componentFullName, components))
     if duplicateComponents.__len__() > 0:
@@ -91,7 +89,7 @@ def Component(func: object):
         components.append(ComponentClass(**{
             'fullname': componentFullName,
             'func': wrapper,
-            'annotations': annotations
+            'annotations': wrapper.__init__.__annotations__ if "__annotations__" in dir(wrapper.__init__) else {}
         }))
     return  wrapper
 
