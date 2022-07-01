@@ -2,6 +2,7 @@ import threading
 import time
 import logging
 
+from cndi.annotations import Component
 from cndi.env import getContextEnvironment
 
 class Event(object):
@@ -11,6 +12,7 @@ class Event(object):
         self.event_invoker = event_invoker
         self.event_object = event_object
 
+@Component
 class EventHandler(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
@@ -21,6 +23,10 @@ class EventHandler(threading.Thread):
         self._enabled = getContextEnvironment("rcn.events.enable", defaultValue=False, castFunc=bool)
         self.logger.debug(f"Expected Invoker Time set to {self.expectedInvokerTime} seconds")
         self.logger.debug(f"Sleep time set to {self.sleepwait} seconds")
+
+    def postConstruct(self):
+        if self._enabled:
+            self.start()
 
     def registerEvent(self, event: Event):
         self.EVENTS_MAP[event.event_name] = event
