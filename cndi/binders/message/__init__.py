@@ -66,7 +66,7 @@ class DefaultMessageBinder:
     def performInjection(self):
         for channelName, methodWrapper in CHANNELS_TO_FUNC_MAP.items():
             if channelName not in self.binders:
-                logger.error(f"No binding found for channel - {channelName}")
+                self.logger.error(f"No binding found for channel - {channelName}")
                 continue
             #
             if methodWrapper['is_sink']:
@@ -77,7 +77,9 @@ class DefaultMessageBinder:
                 method(classBean, binder)
 
     def initializeBinders(self):
-        if self.defaultMessageBinder.strip().lower() == "mqtt":
+        if self.defaultMessageBinder.strip().lower() == "rabbitmq":
+            pass
+        elif self.defaultMessageBinder.strip().lower() == "mqtt":
             from cndi.binders.message.mqtt import MqttProducerBinding
             from paho.mqtt.client import Client, MQTTMessage
 

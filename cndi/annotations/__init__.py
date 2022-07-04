@@ -8,6 +8,7 @@ autowires = list()
 components = list()
 beanStore = dict()
 componentStore = dict()
+profiles = dict()
 
 from functools import wraps
 import importlib
