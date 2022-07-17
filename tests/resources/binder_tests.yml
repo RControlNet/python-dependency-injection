@@ -1,4 +1,5 @@
 rcn:
+  profile: mqtt-test
   binders:
     message:
       enable: true
@@ -11,4 +12,21 @@ rcn:
             destination: new-topic
         consumer:
           default-channel-input:
+            destination: new-topic
+
+---
+rcn:
+  profile: rabbitmq-test
+  binders:
+    message:
+      enable: true
+      default: mqtt
+      brokerUrl: localhost
+      brokerPort: 5672
+      rabbitmq:
+        producer:
+          default-channel-output-rabbit:
+            destination: new-topic
+        consumer:
+          default-channel-input-rabbit:
             destination: new-topic

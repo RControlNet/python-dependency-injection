@@ -1,0 +1,14 @@
+rcn:
+  binders:
+    message:
+      enable: true
+      default: rabbitmq
+      brokerUrl: localhost
+      brokerPort: 5672
+      rabbitmq:
+        producer:
+          producer-channel:
+            destination: new-topic
+        consumer:
+          consumer-channel:
+            destination: new-topic
