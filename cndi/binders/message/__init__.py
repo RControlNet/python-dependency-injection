@@ -1,8 +1,8 @@
 from functools import wraps
 
 from cndi.annotations import getBeanObject
+from cndi.binders.message.utils import extractChannelNameFromPropertyKey, SubscriberChannel
 from cndi.env import getContextEnvironment, getContextEnvironments
-import re
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,20 +11,19 @@ logger = logging.getLogger(__name__)
 CHANNELS_TO_TOPIC_MAP = dict()
 CHANNELS_TO_FUNC_MAP = dict()
 
-class SubscriberChannel:
-    def __call__(self, *args, **kwargs):
-        self.callback(*args, **kwargs)
-    def setTopic(self, topic):
-        self.topic = topic
-    def setOnConsumeCallback(self, callback):
-        self.callback = callback
 
-class MessageChannel:
-    def setTopic(self, topic):
-        self.topic = topic
+class Message:
+    def __init__(self, message):
+        self.message = message
+        self.key = None
 
-    def send(self, message) -> None:
-        pass
+    def setMessage(self, message):
+        self.message = message
+        return self
+
+    def setKey(self, key):
+        self.key = key
+        return self
 
 def Input(channelName):
     def inner_function(func):
@@ -57,12 +56,6 @@ class DefaultMessageBinder:
         self.topicConsumers = dict()
         self.initializeBinders()
 
-    def extractChannelNameFromPropertyKey(self, key):
-        matches = re.match("rcn.binders.message.(?P<defaultBinder>[a-z]+).(?P<binderType>(\w)+).(?P<channelName>[a-z0-9\-]+).[destination|property]", key.lower())
-        if matches is not None:
-            return matches.groupdict()['channelName']
-        return None
-
     def performInjection(self):
         for channelName, methodWrapper in CHANNELS_TO_FUNC_MAP.items():
             if channelName not in self.binders:
@@ -77,21 +70,31 @@ class DefaultMessageBinder:
                 method(classBean, binder)
 
     def initializeBinders(self):
+        contextEnvs = getContextEnvironments()
+
         if self.defaultMessageBinder.strip().lower() == "rabbitmq":
-            pass
+            from cndi.binders.message.rabbitmq import RabbitMQProducerBinding, RabbitMQBinder
+
+            rabbitMqBinder = RabbitMQBinder()
+
+            self.binders.update(rabbitMqBinder.bindProducers())
+            self.binders.update(rabbitMqBinder.bindSubscribers(CHANNELS_TO_FUNC_MAP=CHANNELS_TO_FUNC_MAP))
+
         elif self.defaultMessageBinder.strip().lower() == "mqtt":
             from cndi.binders.message.mqtt import MqttProducerBinding
             from paho.mqtt.client import Client, MQTTMessage
 
-            brokerUrl = getContextEnvironment("rcn.binders.message.brokerUrl", required=True)
-            brokerPort = getContextEnvironment("rcn.binders.message.brokerPort", required=True, castFunc=int)
+            brokerUrl = getContextEnvironment("rcn.binders.message.mqtt.brokerUrl", defaultValue=None)
+            brokerPort = getContextEnvironment("rcn.binders.message.mqtt.brokerPort", defaultValue=None)
 
-            contextEnvs = getContextEnvironments()
+            brokerUrl = getContextEnvironment("rcn.binders.message.brokerUrl", required=True, defaultValue=brokerUrl)
+            brokerPort = getContextEnvironment("rcn.binders.message.brokerPort", required=True, castFunc=int, defaultValue=brokerPort)
+
             mqttClient = Client()
 
             mqttProducerChannelBindings = filter(lambda key: key.startswith('rcn.binders.message.mqtt.producer'), contextEnvs)
             for propertyKey in mqttProducerChannelBindings:
-                channelName = self.extractChannelNameFromPropertyKey(propertyKey)
+                channelName = extractChannelNameFromPropertyKey(propertyKey)
                 producerBinding = MqttProducerBinding(mqttClient)
                 topicName = getContextEnvironment(propertyKey, required=True)
 
@@ -103,7 +106,7 @@ class DefaultMessageBinder:
             subscriptionTopics = list()
 
             for propertyKey in mqttConsumerChannelBindings:
-                channelName = self.extractChannelNameFromPropertyKey(propertyKey)
+                channelName = extractChannelNameFromPropertyKey(propertyKey)
                 if channelName not in CHANNELS_TO_FUNC_MAP:
                     self.logger.error(f"Channel not found: {channelName}")
                     continue
