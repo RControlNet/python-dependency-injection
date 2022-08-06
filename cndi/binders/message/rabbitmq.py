@@ -5,6 +5,7 @@ from pika import BlockingConnection
 import logging
 
 from pika.adapters.blocking_connection import BlockingChannel
+from pika.spec import Basic
 
 from cndi.binders.message import Message, SubscriberChannel
 from cndi.binders.message.utils import extractChannelNameFromPropertyKey, MessageChannel
@@ -37,9 +38,10 @@ class RabbitMQSubscriberChannel(SubscriberChannel):
         SubscriberChannel.__init__(self)
         self.channel = channel
 
-    def setTopic(self, topic, channelName=None):
+    def setTopic(self, topic, group="", channelName=None):
         SubscriberChannel.setTopic(self, topic)
-        self.channel.queue_declare(queue=topic)
+        self.channel.queue_declare(queue=topic  + group)
+        self.channel.queue_bind(exchange=topic, queue=topic + group, routing_key="#")
 
 
 
@@ -74,8 +76,15 @@ class RabbitMQBinder():
         topicConsumers = dict()
         binders = dict()
 
+        def consumerMessage(ch: BlockingChannel, method: Basic.Deliver, properties, body):
+            topicConsumers[method.exchange](body)
+
         for propertyKey in self.mqttConsumerChannelBindings:
             channelName = extractChannelNameFromPropertyKey(propertyKey)
+            print(channelName)
+            binderPath = f"rcn.binders.message.rabbitmq.consumer.{channelName}"
+            consumerGroup = getContextEnvironment(f"{binderPath}.group")
+
             if channelName not in CHANNELS_TO_FUNC_MAP:
                 self.logger.error(f"Channel not found: {channelName}")
                 continue
@@ -86,18 +95,14 @@ class RabbitMQBinder():
             topicName = getContextEnvironment(propertyKey, required=True)
             subscriptionTopics.append(topicName)
 
-            consumerBinding.setTopic(topicName)
+            consumerBinding.setTopic(topicName, group=consumerGroup)
             if topicName in topicConsumers:
                 raise KeyError(f"Duplicate topic found {topicName} with {topicConsumers[topicName]}")
 
             topicConsumers[topicName] = consumerBinding
             binders[channelName] = consumerBinding
 
-            self.channel.basic_consume(queue=topicName, auto_ack=True, on_message_callback=
-                        lambda ch, method, properties, body : consumerBinding(body))
-
-
-        self.channelThread.start()
+            self.channel.basic_consume(queue=topicName + consumerGroup, auto_ack=True, on_message_callback=consumerMessage)
 
         return binders
 

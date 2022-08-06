@@ -19,7 +19,7 @@ class MessageChannel:
 
 def extractChannelNameFromPropertyKey(key):
     matches = re.match(
-        "rcn.binders.message.(?P<defaultBinder>[a-z]+).(?P<binderType>(\w)+).(?P<channelName>[a-z0-9\-]+).[destination|property]",
+        "rcn.binders.message.(?P<defaultBinder>[a-z]+).(?P<binderType>(\w)+).(?P<channelName>[a-z0-9\-\_]+).[destination|property]",
         key.lower())
     if matches is not None:
         return matches.groupdict()['channelName']

@@ -54,7 +54,13 @@ class DefaultMessageBinder:
         self.defaultMessageBinder = defaultMessageBinder
         self.binders = dict()
         self.topicConsumers = dict()
+        self.callbacks = list()
+
         self.initializeBinders()
+
+    def start(self):
+        for callback in self.callbacks:
+            callback()
 
     def performInjection(self):
         for channelName, methodWrapper in CHANNELS_TO_FUNC_MAP.items():
@@ -79,6 +85,7 @@ class DefaultMessageBinder:
 
             self.binders.update(rabbitMqBinder.bindProducers())
             self.binders.update(rabbitMqBinder.bindSubscribers(CHANNELS_TO_FUNC_MAP=CHANNELS_TO_FUNC_MAP))
+            self.callbacks.append(rabbitMqBinder.channelThread.start)
 
         elif self.defaultMessageBinder.strip().lower() == "mqtt":
             from cndi.binders.message.mqtt import MqttProducerBinding
@@ -135,4 +142,4 @@ class DefaultMessageBinder:
             mqttClient.on_message = on_message
 
             mqttClient.connect(brokerUrl, brokerPort)
-            mqttClient.loop_start()
+            self.callbacks.append(mqttClient.loop_start)

@@ -1,6 +1,7 @@
 import copy
 import importlib
 import os
+
 from cndi.binders.message import DefaultMessageBinder
 import logging
 
@@ -54,12 +55,17 @@ class AppInitilizer:
                                                  fullname=component.func.__name__, kwargs=kwargs)
 
         messageBinderEnabled = getContextEnvironment("rcn.binders.message.enable", defaultValue=False, castFunc=bool)
+        defaultMessageBinder = None
+
         if messageBinderEnabled:
             defaultMessageBinder = DefaultMessageBinder()
             defaultMessageBinder.performInjection()
 
         for autowire in autowires:
             autowire.dependencyInject()
+
+        if defaultMessageBinder is not None:
+            defaultMessageBinder.start()
 
 def constructKeyWordArguments(annotations):
     kwargs = dict()
