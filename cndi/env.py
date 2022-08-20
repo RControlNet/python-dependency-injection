@@ -64,7 +64,7 @@ def loadEnvFromFile(property_file):
             if f"{RCN_ENVS_CONFIG}.active.profile".lower() in VARS:
                 data = dataDict[VARS[f"{RCN_ENVS_CONFIG}.active.profile".lower()]]
             else:
-                data = dataDict[VARS["rcn.active.profile"]]
+                data = dataDict[os.environ["rcn.active.profile"]]
         envData = walkDictKey(data)
         for key, value in envData:
             addToOsEnviron(key, value)
