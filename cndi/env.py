@@ -9,7 +9,7 @@ RCN_ENVS_CONFIG = 'RCN_ENVS_CONFIG'
 if f"{RCN_ENVS_CONFIG}.active.profile" not in os.environ:
     os.environ[f"{RCN_ENVS_CONFIG}.active.profile"] = "default"
 
-VARS = dict(map(lambda key: (key.lower(),os.environ[key]), filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ)))
+VARS = dict(map(lambda key: (key,os.environ[key]), filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ)))
 
 def addToOsEnviron(key: str, value):
     if not key.startswith("."):

@@ -1,6 +1,6 @@
 import setuptools
 
-VERSION = "2.1.3a"
+VERSION = "2.1.4a"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
