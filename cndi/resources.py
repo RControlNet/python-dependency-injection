@@ -1,11 +1,12 @@
 import os
 from pathlib import Path
+from cndi import BASE_NAME
 
 
 class ResourceFinder:
     def __init__(self):
-        if "RCN_HOME" in os.environ:
-            self.rcnHome = os.environ['RCN_HOME']
+        if f"{BASE_NAME}_HOME" in os.environ:
+            self.rcnHome = os.environ[f'{BASE_NAME}_HOME']
         else:
             self.rcnHome = os.path.join(Path.home().absolute().__str__(), ".rcn")
 
@@ -14,11 +15,15 @@ class ResourceFinder:
         resourceDirPath = os.path.join(currentPath, "resources")
         resourceExist = os.path.exists(resourceDirPath)
 
-        while not resourceExist  \
+        while not resourceExist \
                 and len(resourceDirPath) >= len(self.rcnHome):
             currentPath = currentPath.parent
             resourceDirPath = os.path.join(currentPath.absolute(), "resources")
             resourceExist = os.path.exists(resourceDirPath) and os.path.isdir(resourceDirPath)
+
+        if f'{BASE_NAME}_RESOURCES_DIR' in os.environ and resourceExist == False:
+            resourceExist = os.path.exists(os.path.join(os.environ[f'{BASE_NAME}_RESOURCES_DIR'],
+                                                        resourcePath))
 
         if resourceExist:
             resourcePath = os.path.join(resourceDirPath, resourcePath)
@@ -27,6 +32,7 @@ class ResourceFinder:
             raise FileNotFoundError(f"Resource not found at resources/{resourcePath}")
         else:
             raise FileNotFoundError(f"Resource Path not found resources/{resourcePath}")
+
 
 if __name__ == '__main__':
     resourceFinder = ResourceFinder()

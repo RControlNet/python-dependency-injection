@@ -2,10 +2,12 @@ from yaml import SafeLoader, load_all
 import os, re
 import logging
 
+from cndi import BASE_NAME
+
 logger = logging.getLogger(__name__)
 
 
-RCN_ENVS_CONFIG = 'RCN_ENVS_CONFIG'
+RCN_ENVS_CONFIG = f'{BASE_NAME}_ENVS_CONFIG'
 if f"{RCN_ENVS_CONFIG}.active.profile" not in os.environ:
     os.environ[f"{RCN_ENVS_CONFIG}.active.profile"] = "default"
 
