@@ -22,7 +22,8 @@ class ResourceFinder:
             resourceExist = os.path.exists(resourceDirPath) and os.path.isdir(resourceDirPath)
 
         if f'{BASE_NAME}_RESOURCES_DIR' in os.environ and resourceExist == False:
-            resourceExist = os.path.exists(os.path.join(os.environ[f'{BASE_NAME}_RESOURCES_DIR'],
+            resourceDirPath = os.environ[f'{BASE_NAME}_RESOURCES_DIR']
+            resourceExist = os.path.exists(os.path.join(resourceDirPath,
                                                         resourcePath))
 
         if resourceExist:
