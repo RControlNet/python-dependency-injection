@@ -8,8 +8,10 @@ logger = logging.getLogger(__name__)
 
 
 RCN_ENVS_CONFIG = f'{BASE_NAME}_ENVS_CONFIG'
-if f"{RCN_ENVS_CONFIG}.active.profile" not in os.environ:
-    os.environ[f"{RCN_ENVS_CONFIG}.active.profile"] = "default"
+RCN_ACTIVE_PROFILE = f"{RCN_ENVS_CONFIG}.active.profile"
+
+if RCN_ACTIVE_PROFILE not in os.environ:
+    os.environ[RCN_ACTIVE_PROFILE] = "default"
 
 VARS = dict(map(lambda key: (key,os.environ[key]), filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ)))
 
