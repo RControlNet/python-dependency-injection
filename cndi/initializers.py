@@ -5,7 +5,8 @@ import os
 from cndi.binders.message import DefaultMessageBinder
 import logging
 
-from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, getBean
+from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, getBean, \
+    validateBean, queryOverideBeanStore
 from cndi.env import loadEnvFromFile, getContextEnvironment
 from cndi.utils import importSubModules
 
@@ -38,16 +39,32 @@ class AppInitilizer:
                 tempBean = beanStore[className]
                 kwargs[key] = copy.deepcopy(tempBean['object']) if tempBean['newInstance'] else tempBean['object']
 
-            bean['objectInstance'] = bean['object'](**kwargs)
-            beanStore[bean['name']] = bean
+            functionObject = bean['object']
+            fullname = ".".join([functionObject.__module__, functionObject.__qualname__])
+            validBean = validateBean(fullname)
+            if validBean:
+                bean['objectInstance'] = bean['object'](**kwargs)
+                beanStore[bean['name']] = bean
+            else:
+                logger.debug(f"Ignoring Bean {fullname} due to bean not satisfy")
 
         for component in components:
+            validBean = validateBean(component.fullname)
+            if not validBean:
+                logger.debug(f"Ignoring Component {component.fullname} due to bean not satisfy")
+                continue
+
             componentStore[component.fullname] = component
             kwargs = constructKeyWordArguments(component.annotations)
             objectInstance = component.func(**kwargs)
             if 'postConstruct' in dir(objectInstance):
                 postConstructKArgs = constructKeyWordArguments(objectInstance.postConstruct.__annotations__)
                 objectInstance.postConstruct(**postConstructKArgs)
+
+            override = queryOverideBeanStore(component.fullname)
+            if override is not None:
+                overrideType = override['overrideType']
+                component.fullname = ".".join([overrideType.__module__, overrideType.__name__])
 
             beanStore[component.fullname] = dict(objectInstance=objectInstance,
                                                  name=component.fullname,

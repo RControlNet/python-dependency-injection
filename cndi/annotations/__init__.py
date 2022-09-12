@@ -1,5 +1,9 @@
+import os
+
 from cndi.annotations.component import ComponentClass
 import logging
+
+from cndi.env import RCN_ACTIVE_PROFILE
 
 logger = logging.getLogger("cndi.annotations")
 
@@ -8,7 +12,9 @@ autowires = list()
 components = list()
 beanStore = dict()
 componentStore = dict()
-profiles = dict()
+profilesStores = dict()
+conditionalRender = dict()
+overrideStore = dict()
 
 from functools import wraps
 import importlib
@@ -25,15 +31,19 @@ def normaliseModuleAndClassName(name):
     if "__init__" in nameList:
         nameList.remove("__init__")
     return '.'.join(nameList)
+
 def getBeanObject(objectType):
-    objectType = normaliseModuleAndClassName(objectType)
-    bean = beanStore[objectType]
+    bean = queryBeanStorage(objectType)
     objectInstance = bean['objectInstance']
     # if (objectInstance.__class__.__name__ == "function"):
     #     args[key] = objectInstance()
     # else:
     return copy.deepcopy(objectInstance) if bean['newInstance'] else objectInstance
 
+def queryBeanStorage(fullname):
+    objectType = normaliseModuleAndClassName(fullname)
+    bean = beanStore[objectType]
+    return bean
 
 class AutowiredClass:
     def __init__(self, required, func, kwargs: dict()):
@@ -72,9 +82,39 @@ class AutowiredClass:
         return list(
             map(lambda dependency: normaliseModuleAndClassName('.'.join([dependency.__module__, dependency.__name__])), self.kwargs.values()))
 
+def OverrideBeanType(type: object):
+    """
+    OverrideBeanType is used to override the current annotated @Component class to be injected as some other object
+
+    :param type: Class type to override while performing Dependency Injection
+    :return: function wrapper
+    """
+    def inner_function(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        fullname = '.'.join([wrapper.__module__, wrapper.__name__])
+
+        overrideStore[fullname] = {
+            "func": wrapper,
+            "overrideType": type
+        }
+        return wrapper
+    return inner_function
+
+def queryOverideBeanStore(fullname):
+    if fullname in overrideStore:
+        return overrideStore[fullname]
+    else:
+        return None
 
 def Component(func: object):
-
+    """
+    When decorated with @Component, AppInitializer tries to automatically initialise the class this decorator is added to
+    :param func:
+    :return:
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -93,6 +133,26 @@ def Component(func: object):
         }))
     return  wrapper
 
+def validateBean(fullname):
+    profile = queryProfileData(fullname)
+    condition = queryContitionalRenderingStore(fullname)
+    if profile is None and condition is None:
+        return True
+    flag = True
+
+    if profile is not None:
+        profileNames = set(profile['profiles'])
+        environmentProfiles = set(map(lambda x: x.strip(), os.environ[RCN_ACTIVE_PROFILE].split(",")))
+        intersectionProfiles = profileNames.intersection(environmentProfiles)
+
+        flag &= intersectionProfiles.__len__() >= 1
+
+    if condition is not None:
+        callback = condition['callback']
+        callbackValue = callback(condition['func'])
+        flag &= callbackValue
+
+    return flag
 
 def Bean(newInstance=False):
     def inner_function(func):
@@ -104,20 +164,69 @@ def Bean(newInstance=False):
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
 
+        fullname = '.'.join([returnType.__module__, returnType.__name__])
         annotations = dict(
             map(lambda key: (key, '.'.join([annotations[key].__module__, annotations[key].__qualname__])), annotations))
-        beans.append({
-            'name': '.'.join([returnType.__module__, returnType.__name__]),
-            'newInstance': newInstance,
-            'object': wrapper,
-            'fullname': wrapper.__qualname__,
-            'kwargs': annotations,
-            'index': len(beans)
-        })
+
+        if validateBean(fullname):
+            beans.append({
+                'name': fullname,
+                'newInstance': newInstance,
+                'object': wrapper,
+                'fullname': wrapper.__qualname__,
+                'kwargs': annotations,
+                'index': len(beans)
+            })
+
+            return wrapper
+        else:
+            return None
+
+    return inner_function
+
+def ConditionalRendering(callback=lambda method: True):
+    def inner_function(func: object):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        fullname = ".".join([wrapper.__module__, wrapper.__qualname__])
+        conditionalRender[fullname] = {
+            "func": wrapper,
+            "callback": callback
+        }
+
         return wrapper
 
     return inner_function
 
+def queryContitionalRenderingStore(fullname):
+    if fullname in conditionalRender:
+        return conditionalRender[fullname]
+    else:
+        return None
+
+def Profile(profiles=["default"]):
+    def inner_function(func: object):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        fullname = ".".join([wrapper.__module__, wrapper.__qualname__])
+        profilesStores[fullname] = {
+            "func": wrapper,
+            "profiles": profiles
+        }
+
+        return wrapper
+
+    return inner_function
+
+def queryProfileData(fullname):
+    if fullname in profilesStores:
+        return profilesStores.get(fullname)
+    else:
+        return None
 
 def Autowired(required=True):
     def inner_function(func: object):
@@ -138,7 +247,6 @@ def Autowired(required=True):
 
 def getBean(beans, name):
     return list(filter(lambda x: x['name'] == name, beans))[0]
-
 
 def workOrder(beans):
     allBeanNames = list(map(lambda bean: bean['name'], beans))
