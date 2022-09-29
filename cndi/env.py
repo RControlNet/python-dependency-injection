@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 RCN_ENVS_CONFIG = f'{BASE_NAME}_ENVS_CONFIG'
-RCN_ACTIVE_PROFILE = f"{RCN_ENVS_CONFIG}.active.profile"
+RCN_ACTIVE_PROFILE = f"{RCN_ENVS_CONFIG}.active.profile" # RCN_ENVS_CONFIG.active.profile
 
 if RCN_ACTIVE_PROFILE not in os.environ:
     os.environ[RCN_ACTIVE_PROFILE] = "default"
@@ -60,15 +60,18 @@ def loadEnvFromFile(property_file):
         raise FileNotFoundError(f"Environment file does not exists at {property_file}")
 
     with open(property_file, "r") as stream:
-        data = list(map(lambda x: normalize(x), load_all(stream, SafeLoader)))
+        data = list(load_all(stream, SafeLoader))
         if len(data) == 1:
             data = data[0]
         else:
             dataDict = dict(map(lambda x: (x['rcn']['profile'], x), data))
             if f"{RCN_ENVS_CONFIG}.active.profile".lower() in VARS:
                 data = dataDict[VARS[f"{RCN_ENVS_CONFIG}.active.profile".lower()]]
-            else:
+            elif "rcn.active.profile" in os.environ:
                 data = dataDict[os.environ["rcn.active.profile"]]
+            else:
+                data = dataDict["default"]
+            data = normalize(data)
         envData = walkDictKey(data)
         for key, value in envData:
             addToOsEnviron(key, value)
