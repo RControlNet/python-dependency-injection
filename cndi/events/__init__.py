@@ -42,6 +42,8 @@ class EventHandler(threading.Thread):
         while self._enabled:
             for event_name in self.EVENTS_MAP:
                 event = self.EVENTS_MAP[event_name]
+                if event.event_invoker is None:
+                    continue
                 try:
                     self.logger.debug(f"Calling event - {event_name}")
                     start = time.time()

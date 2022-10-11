@@ -1,6 +1,7 @@
 from functools import wraps
 
-from cndi.annotations import getBeanObject
+from cndi.annotations import getBeanObject, Component, ConditionalRendering
+from cndi.binders.consts import RCN_MESSAGE_BINDERS
 from cndi.binders.message.utils import extractChannelNameFromPropertyKey, SubscriberChannel
 from cndi.env import getContextEnvironment, getContextEnvironments
 import logging
@@ -43,19 +44,20 @@ def Output(channelName):
         return wrapper
     return inner_function
 
+def _conditionalRenderDefaultMessageBinder(wrapper):
+    defaultMessageBinder = getContextEnvironment("rcn.binders.message.enable",  defaultValue=False)
+    return defaultMessageBinder
+
+@Component
+@ConditionalRendering(callback=_conditionalRenderDefaultMessageBinder)
 class DefaultMessageBinder:
-    def __init__(self):
+    def   __init__(self):
         self.logger = logging.getLogger('.'.join([self.__class__.__module__, self.__class__.__name__]))
 
-        defaultMessageBinder = getContextEnvironment("rcn.binders.message.default")
-        if defaultMessageBinder is None:
-            raise AttributeError(f"Message binder not found")
-
-        self.defaultMessageBinder = defaultMessageBinder
         self.binders = dict()
         self.topicConsumers = dict()
         self.callbacks = list()
-
+        self.defaultMessageBinder = getContextEnvironment("rcn.binders.message.default")
         self.initializeBinders()
 
     def start(self):
@@ -67,7 +69,7 @@ class DefaultMessageBinder:
             if channelName not in self.binders:
                 self.logger.error(f"No binding found for channel - {channelName}")
                 continue
-            #
+
             if methodWrapper['is_sink']:
                 binder = self.binders[channelName]
                 method = methodWrapper['func']
@@ -91,11 +93,11 @@ class DefaultMessageBinder:
             from cndi.binders.message.mqtt import MqttProducerBinding
             from paho.mqtt.client import Client, MQTTMessage
 
-            brokerUrl = getContextEnvironment("rcn.binders.message.mqtt.brokerUrl", defaultValue=None)
-            brokerPort = getContextEnvironment("rcn.binders.message.mqtt.brokerPort", defaultValue=None)
+            brokerUrl = getContextEnvironment(f"{RCN_MESSAGE_BINDERS}.mqtt.brokerUrl", defaultValue=None)
+            brokerPort = getContextEnvironment(f"{RCN_MESSAGE_BINDERS}.mqtt.brokerPort", defaultValue=None)
 
-            brokerUrl = getContextEnvironment("rcn.binders.message.brokerUrl", required=True, defaultValue=brokerUrl)
-            brokerPort = getContextEnvironment("rcn.binders.message.brokerPort", required=True, castFunc=int, defaultValue=brokerPort)
+            brokerUrl = getContextEnvironment(f"{RCN_MESSAGE_BINDERS}.brokerUrl", required=True, defaultValue=brokerUrl)
+            brokerPort = getContextEnvironment(f"{RCN_MESSAGE_BINDERS}.brokerPort", required=True, castFunc=int, defaultValue=brokerPort)
 
             mqttClient = Client()
 

@@ -134,6 +134,11 @@ def Component(func: object):
     return  wrapper
 
 def validateBean(fullname):
+    """
+    Validates Beans before performing the dependency injection
+    :param fullname: bean class full classpath name
+    :return: Boolean type
+    """
     profile = queryProfileData(fullname)
     condition = queryContitionalRenderingStore(fullname)
     if profile is None and condition is None:
@@ -150,11 +155,16 @@ def validateBean(fullname):
     if condition is not None:
         callback = condition['callback']
         callbackValue = callback(condition['func'])
-        flag &= callbackValue
+        flag &= bool(callbackValue)
 
     return flag
 
 def Bean(newInstance=False):
+    """
+
+    :param newInstance:
+    :return:
+    """
     def inner_function(func):
         annotations = func.__annotations__
         returnType = annotations['return']
@@ -185,6 +195,11 @@ def Bean(newInstance=False):
     return inner_function
 
 def ConditionalRendering(callback=lambda method: True):
+    """
+
+    :param callback:
+    :return:
+    """
     def inner_function(func: object):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -207,6 +222,11 @@ def queryContitionalRenderingStore(fullname):
         return None
 
 def Profile(profiles=["default"]):
+    """
+
+    :param profiles:
+    :return:
+    """
     def inner_function(func: object):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -229,6 +249,11 @@ def queryProfileData(fullname):
         return None
 
 def Autowired(required=True):
+    """
+    
+    :param required:
+    :return:
+    """
     def inner_function(func: object):
         annotations = func.__annotations__
 

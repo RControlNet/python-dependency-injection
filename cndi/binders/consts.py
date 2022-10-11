@@ -1,0 +1,1 @@
+RCN_MESSAGE_BINDERS="rcn.binders.message"
