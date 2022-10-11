@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from yaml import SafeLoader, load_all
 import os, re
 import logging
@@ -10,10 +12,25 @@ logger = logging.getLogger(__name__)
 RCN_ENVS_CONFIG = f'{BASE_NAME}_ENVS_CONFIG'
 RCN_ACTIVE_PROFILE = f"{RCN_ENVS_CONFIG}.active.profile" # RCN_ENVS_CONFIG.active.profile
 
+
+if f"{BASE_NAME}_HOME" not in os.environ:
+    os.environ[f"{BASE_NAME}_HOME"] = f"{Path.home()}/.rcn/"
+
+configDir = os.environ[f"{BASE_NAME}_HOME"]
+
 if RCN_ACTIVE_PROFILE not in os.environ:
     os.environ[RCN_ACTIVE_PROFILE] = "default"
 
 VARS = dict(map(lambda key: (key,os.environ[key]), filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ)))
+
+def loadEnvsFromRcnHome():
+    profile = getConfiguredProfile()
+    profileHome = os.path.join(configDir, profile)
+    profileEnvFile = os.path.join(profileHome, "env.yml")
+
+    if os.path.exists(profileEnvFile):
+        logger.info(f"Profile Environment file found for profile f{profile}")
+        loadEnvFromFile(profileEnvFile)
 
 def addToOsEnviron(key: str, value):
     if not key.startswith("."):
@@ -55,6 +72,14 @@ def loadEnvFromFiles(*files):
 
         loadEnvFromFile(file)
 
+def getConfiguredProfile():
+    if f"{RCN_ENVS_CONFIG}.active.profile".lower() in VARS:
+        return VARS[f"{RCN_ENVS_CONFIG}.active.profile".lower()]
+    elif "rcn.active.profile" in os.environ:
+        return os.environ["rcn.active.profile"]
+    else:
+        return "default"
+
 def loadEnvFromFile(property_file):
     if(not os.path.exists(property_file)):
         raise FileNotFoundError(f"Environment file does not exists at {property_file}")
@@ -65,12 +90,8 @@ def loadEnvFromFile(property_file):
             data = data[0]
         else:
             dataDict = dict(map(lambda x: (x['rcn']['profile'], x), data))
-            if f"{RCN_ENVS_CONFIG}.active.profile".lower() in VARS:
-                data = dataDict[VARS[f"{RCN_ENVS_CONFIG}.active.profile".lower()]]
-            elif "rcn.active.profile" in os.environ:
-                data = dataDict[os.environ["rcn.active.profile"]]
-            else:
-                data = dataDict["default"]
+            profile = getConfiguredProfile()
+            data = dataDict[profile]
             data = normalize(data)
         envData = walkDictKey(data)
         for key, value in envData:
