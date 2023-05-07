@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 class AppInitilizer:
     def __init__(self):
+        """
+        Responsible to initialise Dependency Injection for Application
+        """
         self.componentsPath = list()
         applicationYml = "resources/application.yml"
         if os.path.exists(applicationYml):
@@ -27,6 +30,18 @@ class AppInitilizer:
 
 
     def run(self):
+        """
+        Performing Dependency Injection, on priority basis
+        Steps Involved in DI
+            1. Load Modules and Sub Modules for Bean/Component scanning
+            2. Create list for the Available Beans and Components
+            3. Resolve Dependency Tree for Beans and Components and Sort in reverse tree dependency
+            4. For component classes run postConstruct method if available
+            5. Read Configuration for binders and initialise binders for given type (i.e rabbitmq, mqtt)
+            6. Perform Dependency Injection by calling setter methods
+            7. Start Binder Configuration
+        :return: None
+        """
         for module in self.componentsPath:
             importSubModules(module)
 
