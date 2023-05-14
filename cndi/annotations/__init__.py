@@ -26,11 +26,13 @@ def importModuleName(fullname):
     module = importlib.import_module(modules[-1], package='.'.join(modules[:-1]))
     return module
 
+
 def normaliseModuleAndClassName(name):
-    nameList:list = name.split(".")
+    nameList: list = name.split(".")
     if "__init__" in nameList:
         nameList.remove("__init__")
     return '.'.join(nameList)
+
 
 def getBeanObject(objectType):
     bean = queryBeanStorage(objectType)
@@ -40,10 +42,12 @@ def getBeanObject(objectType):
     # else:
     return copy.deepcopy(objectInstance) if bean['newInstance'] else objectInstance
 
+
 def queryBeanStorage(fullname):
     objectType = normaliseModuleAndClassName(fullname)
     bean = beanStore[objectType]
     return bean
+
 
 class AutowiredClass:
     def __init__(self, required, func, kwargs: dict()):
@@ -80,7 +84,9 @@ class AutowiredClass:
 
     def calculateDependencies(self):
         return list(
-            map(lambda dependency: normaliseModuleAndClassName('.'.join([dependency.__module__, dependency.__name__])), self.kwargs.values()))
+            map(lambda dependency: normaliseModuleAndClassName('.'.join([dependency.__module__, dependency.__name__])),
+                self.kwargs.values()))
+
 
 def OverrideBeanType(type: object):
     """
@@ -89,6 +95,7 @@ def OverrideBeanType(type: object):
     :param type: Class type to override while performing Dependency Injection
     :return: function wrapper
     """
+
     def inner_function(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -101,7 +108,9 @@ def OverrideBeanType(type: object):
             "overrideType": type
         }
         return wrapper
+
     return inner_function
+
 
 def queryOverideBeanStore(fullname):
     if fullname in overrideStore:
@@ -109,19 +118,21 @@ def queryOverideBeanStore(fullname):
     else:
         return None
 
+
 def Component(func: object):
     """
     When decorated with @Component, AppInitializer tries to automatically initialise the class this decorator is added to
     :param func:
     :return:
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
 
     moduleName = wrapper.__module__[:-9] if wrapper.__module__.endswith(".__init__") else wrapper.__module__
-    componentFullName = '.'.join([moduleName,wrapper.__qualname__])
-    logger.info(f"Function name " + componentFullName)
+    componentFullName = '.'.join([moduleName, wrapper.__qualname__])
+    logger.info(f"Registering Function name " + componentFullName)
     duplicateComponents = list(filter(lambda component: component.fullname == componentFullName, components))
     if duplicateComponents.__len__() > 0:
         logger.info(f"Duplicate Component found for: {duplicateComponents}")
@@ -131,7 +142,8 @@ def Component(func: object):
             'func': wrapper,
             'annotations': wrapper.__init__.__annotations__ if "__annotations__" in dir(wrapper.__init__) else {}
         }))
-    return  wrapper
+    return wrapper
+
 
 def validateBean(fullname):
     """
@@ -157,7 +169,11 @@ def validateBean(fullname):
         callbackValue = callback(condition['func'])
         flag &= bool(callbackValue)
 
+    if flag is False:
+        logger.info("Validation Failed for Bean " + fullname)
+
     return flag
+
 
 def Bean(newInstance=False):
     """
@@ -165,6 +181,7 @@ def Bean(newInstance=False):
     :param newInstance:
     :return:
     """
+
     def inner_function(func):
         annotations = func.__annotations__
         returnType = annotations['return']
@@ -194,12 +211,14 @@ def Bean(newInstance=False):
 
     return inner_function
 
+
 def ConditionalRendering(callback=lambda method: True):
     """
 
     :param callback:
     :return:
     """
+
     def inner_function(func: object):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -215,11 +234,13 @@ def ConditionalRendering(callback=lambda method: True):
 
     return inner_function
 
+
 def queryContitionalRenderingStore(fullname):
     if fullname in conditionalRender:
         return conditionalRender[fullname]
     else:
         return None
+
 
 def Profile(profiles=["default"]):
     """
@@ -227,6 +248,7 @@ def Profile(profiles=["default"]):
     :param profiles:
     :return:
     """
+
     def inner_function(func: object):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -242,11 +264,13 @@ def Profile(profiles=["default"]):
 
     return inner_function
 
+
 def queryProfileData(fullname):
     if fullname in profilesStores:
         return profilesStores.get(fullname)
     else:
         return None
+
 
 def Autowired(required=True):
     """
@@ -254,6 +278,7 @@ def Autowired(required=True):
     :param required:
     :return:
     """
+
     def inner_function(func: object):
         annotations = func.__annotations__
 
@@ -270,8 +295,10 @@ def Autowired(required=True):
 
     return inner_function
 
+
 def getBean(beans, name):
     return list(filter(lambda x: x['name'] == name, beans))[0]
+
 
 def workOrder(beans):
     allBeanNames = list(map(lambda bean: bean['name'], beans))
@@ -300,5 +327,3 @@ def workOrder(beans):
 
     assert len(beanQueue) == len(beans), "Somebeans were not initialized properly"
     return list(sorted(beanQueue, key=lambda x: x['index']))
-
-
