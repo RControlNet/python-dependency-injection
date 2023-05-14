@@ -2,7 +2,7 @@ import unittest
 
 from cndi.annotations import Component, Bean, Autowired
 from cndi.env import VARS
-from cndi.initializers import AppInitilizer
+from cndi.initializers import AppInitializer
 from test_module.TestBean import TestBean
 
 
@@ -37,7 +37,7 @@ class TestComponents(unittest.TestCase):
             self.store['component'] = secondComponent
             self.store['bean'] = bean
 
-        appInitializer = AppInitilizer()
+        appInitializer = AppInitializer()
         appInitializer.run()
 
         self.assertTrue(self.store['component'].firstComponent.triggered)

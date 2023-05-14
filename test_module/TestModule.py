@@ -5,7 +5,7 @@ from cndi.env import RCN_ACTIVE_PROFILE
 os.environ[RCN_ACTIVE_PROFILE] = "default"
 
 from cndi.annotations import Bean, Profile, Autowired, Component, ConditionalRendering, OverrideBeanType
-from cndi.initializers import AppInitilizer
+from cndi.initializers import AppInitializer
 from test_module.TestBean import TestBean
 
 @Profile(profiles=['hello'])
@@ -33,5 +33,5 @@ def test(test: TestBean, testC: tetClassA):
     print(test.name, testC)
 
 if __name__ == '__main__':
-    app_initializer = AppInitilizer()
+    app_initializer = AppInitializer()
     app_initializer.run()

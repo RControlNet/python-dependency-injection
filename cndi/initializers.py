@@ -12,7 +12,7 @@ from cndi.utils import importSubModules
 
 logger = logging.getLogger(__name__)
 
-class AppInitilizer:
+class AppInitializer:
     def __init__(self):
         """
         Responsible to initialise Dependency Injection for Application

@@ -5,7 +5,7 @@ from cndi.binders.message import DefaultMessageBinder, Output, Input
 from cndi.binders.message.mqtt import MqttProducerBinding
 from cndi.binders.message.utils import MessageChannel
 from cndi.env import VARS, loadEnvFromFile, RCN_ENVS_CONFIG
-from cndi.initializers import AppInitilizer
+from cndi.initializers import AppInitializer
 
 
 @Component
@@ -48,7 +48,7 @@ class MQTTDefaultMessageBinderTest(unittest.TestCase):
         def setSink(sink: SinkMQTTTest):
             sink.outputChannel1Binding.send("Hello")
 
-        appInitializer = AppInitilizer()
+        appInitializer = AppInitializer()
         appInitializer.componentScan("cndi.binders")
         appInitializer.run()
 
@@ -69,6 +69,6 @@ class MQTTDefaultMessageBinderTest(unittest.TestCase):
 #             print(sink)
 #             sink.outputChannel1Binding.send("Hello")
 #
-#         appInitializer = AppInitilizer()
+#         appInitializer = AppInitializer()
 #         appInitializer.componentScan("cndi.binders")
 #         appInitializer.run()

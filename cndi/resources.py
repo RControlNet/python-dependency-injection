@@ -33,9 +33,3 @@ class ResourceFinder:
             raise FileNotFoundError(f"Resource not found at resources/{resourcePath}")
         else:
             raise FileNotFoundError(f"Resource Path not found resources/{resourcePath}")
-
-
-if __name__ == '__main__':
-    resourceFinder = ResourceFinder()
-    print(resourceFinder.rcnHome)
-    print(resourceFinder.findResource(""))

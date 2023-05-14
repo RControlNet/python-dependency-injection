@@ -1,7 +1,7 @@
 import unittest
 
 from cndi.annotations import Autowired
-from cndi.initializers import AppInitilizer
+from cndi.initializers import AppInitializer
 from test_module.TestBean import TestBean
 
 
@@ -13,7 +13,7 @@ class AppInitializerTest(unittest.TestCase):
             print(bean)
             testBean = bean
 
-        app = AppInitilizer()
+        app = AppInitializer()
         app.componentScan("test_module")
 
         app.run()
