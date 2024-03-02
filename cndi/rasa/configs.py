@@ -1,8 +1,7 @@
 import os
 from pathlib import Path
-
 import yaml
-
+from yaml import SafeLoader
 
 class BaseConfigGenerator:
     def __init__(self, sourceDir, destinationFile):
@@ -18,7 +17,7 @@ class BaseConfigGenerator:
         docs = []
         for file in files:
             with open(file, 'r') as stream:
-                docs.append(yaml.load(stream))
+                docs.append(yaml.load(stream, Loader=SafeLoader))
 
         return docs
 
@@ -42,9 +41,10 @@ class NLUConfigGenerator(BaseConfigGenerator):
     def writeToFile(self, outputData={}):
         nlu = []
         for intent, examples in outputData.items():
+            example = str.join("", map(lambda x: f"- {x} \n", examples))
             nlu.append({
                 "intent": intent,
-                "examples": examples
+                "examples": example
             })
 
         nluData = {
