@@ -152,7 +152,7 @@ def validateBean(fullname):
     :param fullname: bean class full classpath name
     :return: Boolean type
     """
-    print(fullname)
+
     profile = queryProfileData(fullname)
     condition = queryContitionalRenderingStore(fullname)
     if profile is None and condition is None:

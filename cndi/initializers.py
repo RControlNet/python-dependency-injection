@@ -45,7 +45,6 @@ class AppInitializer:
         for module in self.componentsPath:
             importSubModules(module)
 
-        print(beans)
         for bean in beans:
             validBean = validateBean(bean['fullname'])
             if not validBean:
