@@ -6,7 +6,7 @@ from cndi.binders.message import DefaultMessageBinder
 import logging
 
 from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, getBean, \
-    validateBean, queryOverideBeanStore
+    validateBean, queryOverideBeanStore, validatedBeans
 from cndi.env import loadEnvFromFile, getContextEnvironment
 from cndi.utils import importSubModules
 
@@ -45,7 +45,15 @@ class AppInitializer:
         for module in self.componentsPath:
             importSubModules(module)
 
-        workOrderBeans = workOrder(beans)
+        print(beans)
+        for bean in beans:
+            validBean = validateBean(bean['fullname'])
+            if not validBean:
+                continue
+            else:
+                validatedBeans.append(bean)
+
+        workOrderBeans = workOrder(validatedBeans)
 
         for bean in workOrderBeans:
             logger.info(f"Registering Bean {bean['fullname']}")

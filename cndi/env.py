@@ -110,14 +110,14 @@ def getListTypeContextEnvironments():
     dataDict = dict(filter(lambda key: key[0].__contains__(".#"), rcn_envs.items()))
     return dataDict
 
-def getContextEnvironment(key: str, defaultValue = None, castFunc = None, required=False):
+def getContextEnvironment(key: str, defaultValue = None, castFunc = None, required=True):
     envDict = getContextEnvironments()
     key = key.lower()
     if key in envDict:
         if castFunc is not None:
-            return castFunc(envDict[key])
+            return castFunc(envDict[key]) if castFunc is not bool else str(envDict[key]).lower().strip() in ['true', '1']
         return envDict[key]
-    if required:
+    if required and defaultValue is None:
         raise KeyError(f"Environment Variable with Key: {key} not found")
     return defaultValue
 

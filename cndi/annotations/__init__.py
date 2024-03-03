@@ -7,6 +7,7 @@ from cndi.env import RCN_ACTIVE_PROFILE
 
 logger = logging.getLogger("cndi.annotations")
 
+validatedBeans = list()
 beans = list()
 autowires = list()
 components = list()
@@ -151,6 +152,7 @@ def validateBean(fullname):
     :param fullname: bean class full classpath name
     :return: Boolean type
     """
+    print(fullname)
     profile = queryProfileData(fullname)
     condition = queryContitionalRenderingStore(fullname)
     if profile is None and condition is None:
@@ -212,7 +214,7 @@ def Bean(newInstance=False):
     return inner_function
 
 
-def ConditionalRendering(callback=lambda method: True):
+def ConditionalRendering(callback=lambda method: True, overrideFullName = None):
     """
 
     :param callback:
@@ -224,7 +226,8 @@ def ConditionalRendering(callback=lambda method: True):
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
 
-        fullname = ".".join([wrapper.__module__, wrapper.__qualname__])
+        fullname = ".".join([wrapper.__module__, wrapper.__qualname__]) if overrideFullName is None else overrideFullName
+
         conditionalRender[fullname] = {
             "func": wrapper,
             "callback": callback
