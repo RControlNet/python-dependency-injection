@@ -8,6 +8,7 @@ import logging
 from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, getBean, \
     validateBean, queryOverideBeanStore, validatedBeans
 from cndi.env import loadEnvFromFile, getContextEnvironment
+from cndi.http.management import ManagementServer, managementServerSupported
 from cndi.utils import importSubModules
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,8 @@ class AppInitializer:
         """
         self.componentsPath = list()
         applicationYml = "resources/application.yml"
+        self.managementServer = ManagementServer()
+
         if os.path.exists(applicationYml):
             logger.info(f"External Configuration found: {applicationYml}")
             loadEnvFromFile(applicationYml)
@@ -106,6 +109,9 @@ class AppInitializer:
 
         if defaultMessageBinder is not None:
             defaultMessageBinder.start()
+
+        if managementServerSupported():
+            self.managementServer.start()
 
 def constructKeyWordArguments(annotations):
     kwargs = dict()
