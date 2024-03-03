@@ -42,6 +42,7 @@ class AppInitializer:
             7. Start Binder Configuration
         :return: None
         """
+
         for module in self.componentsPath:
             importSubModules(module)
 
