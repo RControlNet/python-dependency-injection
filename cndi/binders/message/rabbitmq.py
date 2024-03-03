@@ -1,3 +1,4 @@
+import os
 from threading import Thread
 
 import pika
@@ -55,9 +56,12 @@ class RabbitMQBinder():
         brokerPort = getContextEnvironment("rcn.binders.message.brokerPort", required=True, castFunc=int,
                                            defaultValue=brokerPort)
 
-        contextEnvs = getContextEnvironments()
+        user = getContextEnvironment("rcn.binders.message.rabbitmq.user")
+        userSecret = getContextEnvironment("rcn.binders.message.rabbitmq.userSecret")
 
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=brokerUrl, port=brokerPort))
+        contextEnvs = getContextEnvironments()
+        credentials = pika.PlainCredentials(user,  userSecret)
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=brokerUrl, port=brokerPort, credentials=credentials))
         self.rabbotmqProducerChannelBindings = filter(lambda key: key.startswith('rcn.binders.message.rabbitmq.producer'),
                                                  contextEnvs)
         self.mqttConsumerChannelBindings = filter(
