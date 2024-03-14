@@ -6,6 +6,15 @@ from cndi.annotations import Component
 from cndi.env import getContextEnvironment
 
 class Event(object):
+    """
+    Represents an event with its name, handler, object, and invoker.
+
+    Attributes:
+        event_name: The name of the event.
+        event_handler: The function to be called when the event is triggered.
+        event_object: The object that the event pertains to.
+        event_invoker: The object that triggered the event.
+    """
     def __init__(self, event_name=None, event_handler=None, event_object=None, event_invoker=None):
         self.event_name = event_name
         self.event_handler = event_handler
@@ -14,6 +23,19 @@ class Event(object):
 
 @Component
 class EventHandler(threading.Thread):
+    """
+    Handles events in a separate thread.
+
+    Attributes:
+        EVENTS_MAP: A dictionary mapping event names to their handlers.
+        sleepwait: The time to wait between checking for new events.
+        expectedInvokerTime: The expected time for an event invoker to complete.
+        _enabled: Whether the event handler is enabled.
+
+    Methods:
+        postConstruct: Starts the event handler thread if it is enabled.
+        registerEvent: Registers a new event.
+    """
     def __init__(self):
         threading.Thread.__init__(self)
         self.logger = logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}")
@@ -25,13 +47,32 @@ class EventHandler(threading.Thread):
         self.logger.debug(f"Sleep time set to {self.sleepwait} seconds")
 
     def postConstruct(self):
+        """
+        Starts the event handler thread if it is enabled.
+        """
         if self._enabled:
             self.start()
 
     def registerEvent(self, event: Event):
+        """
+        Registers a new event.
+
+        Args:
+            event: The event to register.
+        """
         self.EVENTS_MAP[event.event_name] = event
 
     def triggerEventExplicit(self, eventName, **kwargs):
+        """
+        Triggers an event explicitly by its name.
+
+        Args:
+            eventName: The name of the event to trigger.
+            **kwargs: Additional keyword arguments to pass to the event handler.
+
+        Returns:
+            None if the event name is not in the EVENTS_MAP or the event handler is not enabled.
+        """
         if eventName not in self.EVENTS_MAP or not self._enabled:
             return None
 
@@ -39,6 +80,12 @@ class EventHandler(threading.Thread):
         eventObject.event_handler(kwargs, None)
 
     def run(self) -> None:
+        """
+        Continuously checks for and handles events while the event handler is enabled.
+
+        Returns:
+            None
+        """
         while self._enabled:
             for event_name in self.EVENTS_MAP:
                 event = self.EVENTS_MAP[event_name]

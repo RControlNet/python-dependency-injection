@@ -1,3 +1,24 @@
+"""
+This module provides functionality for managing components and beans in the application.
+
+It includes functionality for importing modules, normalizing module and class names, and managing various stores for beans, components, profiles, conditional rendering, and overrides.
+
+Variables:
+    validatedBeans: A list of validated beans.
+    beans: A list of beans.
+    autowires: A list of autowires.
+    components: A list of components.
+    beanStore: A dictionary storing beans.
+    componentStore: A dictionary storing components.
+    profilesStores: A dictionary storing profiles.
+    conditionalRender: A dictionary storing conditional rendering settings.
+    overrideStore: A dictionary storing overrides.
+
+Functions:
+    importModuleName: Imports a module given its full name.
+    normaliseModuleAndClassName: Normalizes a module and class name.
+"""
+
 import os
 
 from cndi.annotations.component import ComponentClass
@@ -36,6 +57,17 @@ def normaliseModuleAndClassName(name):
 
 
 def getBeanObject(objectType):
+    """
+    Retrieves a bean object from the bean storage.
+
+    This function queries the bean storage for a bean of the specified type. If the bean is found, it returns a new instance of the bean if the 'newInstance' attribute of the bean is True, otherwise it returns the existing instance.
+
+    Args:
+        objectType: The type of the bean to retrieve.
+
+    Returns:
+        An instance of the bean of the specified type.
+    """
     bean = queryBeanStorage(objectType)
     objectInstance = bean['objectInstance']
     # if (objectInstance.__class__.__name__ == "function"):
@@ -122,11 +154,16 @@ def queryOverideBeanStore(fullname):
 
 def Component(func: object):
     """
-    When decorated with @Component, AppInitializer tries to automatically initialise the class this decorator is added to
-    :param func:
-    :return:
-    """
+    A decorator that registers a class as a component.
 
+    When a class is decorated with @Component, the AppInitializer tries to automatically initialize the class. The class is registered with its full name, which is constructed from the module name and the class name.
+
+    Args:
+        func: The class to be registered as a component.
+
+    Returns:
+        The decorated class.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -216,9 +253,15 @@ def Bean(newInstance=False):
 
 def ConditionalRendering(callback=lambda method: True, overrideFullName = None):
     """
+    A decorator that conditionally renders a class based on a callback function.
 
-    :param callback:
-    :return:
+    This decorator checks the return value of the provided callback function. If the callback returns True, the class is rendered. If the callback returns False, the class is not rendered.
+
+    Args:
+        callback: A function that determines whether the class should be rendered. This function should take no arguments and return a boolean.
+
+    Returns:
+        The decorated class, if the callback returns True. None, if the callback returns False.
     """
 
     def inner_function(func: object):

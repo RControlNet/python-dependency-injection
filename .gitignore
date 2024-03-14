@@ -12,6 +12,7 @@ tests/__pycache__/
 tests/cndi/__pycache__/
 tests/cndi/annotations/__pycache__/
 
-
+.idea
+.pytest_cache
 dist
 build
