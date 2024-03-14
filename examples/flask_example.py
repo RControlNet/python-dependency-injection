@@ -1,5 +1,15 @@
+from flask import jsonify, request
+
+from cndi.annotations import Autowired
 from cndi.env import addToOsEnviron
+from cndi.flask.flask_app import FlaskApplication
 from cndi.initializers import AppInitializer
+
+@Autowired()
+def addEndpoints(flaskApp: FlaskApplication):
+    @flaskApp.app.route("/", methods=["POST"])
+    def serve():
+        return jsonify(request.json)
 
 if __name__ == '__main__':
     addToOsEnviron("app.flask.enabled", "true")                     # Enable Flask App
