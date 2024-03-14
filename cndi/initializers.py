@@ -8,10 +8,16 @@ import logging
 from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, getBean, \
     validateBean, queryOverideBeanStore, validatedBeans
 from cndi.env import loadEnvFromFile, getContextEnvironment
-from cndi.http.management import ManagementServer, managementServerSupported
+from cndi.flask.flask_app import FlaskApplication
+from cndi.http.management import ManagementServer
 from cndi.utils import importSubModules
 
 logger = logging.getLogger(__name__)
+
+initializerComponents = [
+    '.'.join([ManagementServer.__module__, ManagementServer.__name__]),
+    '.'.join([FlaskApplication.__module__, FlaskApplication.__name__])
+]
 
 class AppInitializer:
     def __init__(self):
@@ -110,8 +116,11 @@ class AppInitializer:
         if defaultMessageBinder is not None:
             defaultMessageBinder.start()
 
-        if managementServerSupported():
-            self.managementServer.start()
+        for componentName, componentClass in componentStore.items():
+            if componentName in initializerComponents:
+                objectInstance = getBeanObject(componentName)
+                componentClass.func.run(objectInstance)
+
 
 def constructKeyWordArguments(annotations):
     kwargs = dict()

@@ -1,11 +1,12 @@
 import threading
 
-from cndi.annotations import beans
+
+from cndi.annotations import beans, Component, getBeanObject, ConditionalRendering
+from cndi.annotations.threads import ContextThreads
 from cndi.env import getContextEnvironment
 from cndi.utils import logger
 
-
-def managementServerSupported():
+def managementServerSupported(x):
     try:
         from flask import Flask
         from werkzeug.serving import run_simple
@@ -13,6 +14,8 @@ def managementServerSupported():
     except ImportError:
         return False
 
+@Component
+@ConditionalRendering(callback=managementServerSupported)
 class ManagementServer:
     def registerEndpoints(self, flaskApp):
         from flask import jsonify
@@ -33,7 +36,7 @@ class ManagementServer:
                 })
             return jsonify(beans=targetResponse)
 
-    def start(self):
+    def run(self):
         from flask import Flask
         from werkzeug.serving import run_simple
 
@@ -50,4 +53,8 @@ class ManagementServer:
             "application": flaskApp,
             "threaded": False
         })
+
+        contextThread: ContextThreads = getBeanObject('.'.join([ContextThreads.__module__ , ContextThreads.__name__]))
+        contextThread.add_thread(serverThread)
+
         serverThread.start()
