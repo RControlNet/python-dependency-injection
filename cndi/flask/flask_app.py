@@ -1,5 +1,6 @@
 import threading
 
+
 from cndi.annotations import Component, ConditionalRendering, getBeanObject
 from cndi.annotations.threads import ContextThreads
 from cndi.env import getContextEnvironment, getContextEnvironments
@@ -44,15 +45,18 @@ class FlaskApplication:
 
         The application's name, port, host, debug mode, and configuration settings are retrieved from the environment.
         """
-        from flask import Flask
+        from flask import Flask, Blueprint
         self.appName = getContextEnvironment("app.flask.name", defaultValue="app")
         self.port = getContextEnvironment("app.flask.port", defaultValue=8080, castFunc=int)
         self.host = getContextEnvironment("app.flask.listen", defaultValue="0.0.0.0")
+        self.contextUrl = getContextEnvironment("app.flask.contextUrl", defaultValue="/")
         contextEnvs = getContextEnvironments()
         self.configs = dict(map(lambda items: (items[0]['app.flask.configs.'.__len__():], items[1]),
                                 filter(lambda items: items[0].startswith('app.flask.configs'), contextEnvs.items())))
 
-        self.app = Flask(self.appName)
+        self.__app = Flask(self.appName)
+        self.app = Blueprint(self.appName, __name__)
+        
 
     def postConstruct(self):
         """
@@ -68,11 +72,14 @@ class FlaskApplication:
 
         This method starts the Flask application on the specified host and port.
         """
+
+        self.__app.register_blueprint(self.app, url_prefix=self.contextUrl)
+
         from werkzeug import run_simple
         serverThread = threading.Thread(name="thread-" + self.appName, target=run_simple, kwargs={
             "hostname": self.host,
             "port": self.port,
-            "application": self.app,
+            "application": self.__app,
             **self.configs
         })
 

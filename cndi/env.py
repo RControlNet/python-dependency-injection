@@ -111,6 +111,19 @@ def getListTypeContextEnvironments():
     return dataDict
 
 def getContextEnvironment(key: str, defaultValue = None, castFunc = None, required=True):
+    """
+    Retrieves a value from the environment using a property key.
+
+    This function queries the environment for a value associated with the provided property key. If the key is found in the environment, the associated value is returned. If the key is not found, the provided default value is returned. If a cast function is provided, it is applied to the value before it is returned.
+
+    Args:
+        propertyKey: The key of the property to retrieve from the environment.
+        defaultValue: The value to return if the property key is not found in the environment. Defaults to None.
+        castFunc: A function to apply to the value before it is returned. This can be used to convert the value to a specific type. Defaults to None.
+
+    Returns:
+        The value associated with the property key in the environment, or the default value if the property key is not found. If a cast function is provided, the returned value is the result of applying the cast function to the value.
+    """
     envDict = getContextEnvironments()
     key = key.lower()
     if key in envDict:
