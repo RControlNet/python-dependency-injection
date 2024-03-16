@@ -45,7 +45,7 @@ def Output(channelName):
     return inner_function
 
 def _conditionalRenderDefaultMessageBinder(wrapper):
-    defaultMessageBinder = getContextEnvironment("rcn.binders.message.enable",  defaultValue=False)
+    defaultMessageBinder = getContextEnvironment("rcn.binders.message.enable",  defaultValue=False, castFunc=bool)
     return defaultMessageBinder
 
 @Component

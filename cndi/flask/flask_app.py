@@ -1,9 +1,12 @@
+import logging
 import threading
 
 
 from cndi.annotations import Component, ConditionalRendering, getBeanObject
 from cndi.annotations.threads import ContextThreads
 from cndi.env import getContextEnvironment, getContextEnvironments
+
+logger = logging.getLogger(__name__)
 
 def __check_flask_enabled__(x):
     """
@@ -76,6 +79,7 @@ class FlaskApplication:
         self.__app.register_blueprint(self.app, url_prefix=self.contextUrl)
 
         from werkzeug import run_simple
+        logger.info(f"Starting Flask Server at {self.host}:{self.port} on Context URL: {self.contextUrl}")
         serverThread = threading.Thread(name="thread-" + self.appName, target=run_simple, kwargs={
             "hostname": self.host,
             "port": self.port,
