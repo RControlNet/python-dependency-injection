@@ -85,9 +85,14 @@ def loadEnvFromFile(property_file):
         raise FileNotFoundError(f"Environment file does not exists at {property_file}")
 
     with open(property_file, "r") as stream:
-        data = list(load_all(stream, SafeLoader))
+        data = tuple(filter(
+            lambda x: x is not None,
+            list(load_all(stream, SafeLoader))
+        ))
         if len(data) == 1:
             data = data[0]
+        elif len(data) == 0:
+            logger.warning(f"No Configuration found in the file: {property_file}")
         else:
             dataDict = dict(map(lambda x: (x['rcn']['profile'], x), data))
             profile = getConfiguredProfile()
@@ -114,7 +119,9 @@ def getContextEnvironment(key: str, defaultValue = None, castFunc = None, requir
     """
     Retrieves a value from the environment using a property key.
 
-    This function queries the environment for a value associated with the provided property key. If the key is found in the environment, the associated value is returned. If the key is not found, the provided default value is returned. If a cast function is provided, it is applied to the value before it is returned.
+    This function queries the environment for a value associated with the provided property key.
+    If the key is found in the environment, the associated value is returned. If the key is not found,
+    the provided default value is returned. If a cast function is provided, it is applied to the value before it is returned.
 
     Args:
         propertyKey: The key of the property to retrieve from the environment.
@@ -122,7 +129,9 @@ def getContextEnvironment(key: str, defaultValue = None, castFunc = None, requir
         castFunc: A function to apply to the value before it is returned. This can be used to convert the value to a specific type. Defaults to None.
 
     Returns:
-        The value associated with the property key in the environment, or the default value if the property key is not found. If a cast function is provided, the returned value is the result of applying the cast function to the value.
+        The value associated with the property key in the environment,
+        or the default value if the property key is not found.
+        If a cast function is provided, the returned value is the result of applying the cast function to the value.
     """
     envDict = getContextEnvironments()
     key = key.lower()

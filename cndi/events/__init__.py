@@ -2,7 +2,9 @@ import threading
 import time
 import logging
 
-from cndi.annotations import Component
+from cndi.annotations import Component, getBeanObject, ConditionalRendering
+from cndi.annotations.threads import ContextThreads
+from cndi.consts import RCN_EVENTS_ENABLE, RCN_EVENTS_WAITTIME, RCN_EVENTS_INVOKER_SLEEP_TIME
 from cndi.env import getContextEnvironment
 
 class Event(object):
@@ -22,6 +24,7 @@ class Event(object):
         self.event_object = event_object
 
 @Component
+@ConditionalRendering(callback=lambda x: getContextEnvironment(RCN_EVENTS_ENABLE, defaultValue=False, castFunc=bool))
 class EventHandler(threading.Thread):
     """
     Handles events in a separate thread.
@@ -40,18 +43,17 @@ class EventHandler(threading.Thread):
         threading.Thread.__init__(self)
         self.logger = logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}")
         self.EVENTS_MAP = dict()
-        self.sleepwait = getContextEnvironment("rcn.events.waittime", 2.0, float)
-        self.expectedInvokerTime = getContextEnvironment("rcn.events.expected.invoker.time", 0.003, float)
-        self._enabled = getContextEnvironment("rcn.events.enable", defaultValue=False, castFunc=bool)
+        self.sleepwait = getContextEnvironment(RCN_EVENTS_WAITTIME, defaultValue=2.0, castFunc=float)
+        self.expectedInvokerTime = getContextEnvironment(RCN_EVENTS_INVOKER_SLEEP_TIME, defaultValue=0.003, castFunc=float)
         self.logger.debug(f"Expected Invoker Time set to {self.expectedInvokerTime} seconds")
         self.logger.debug(f"Sleep time set to {self.sleepwait} seconds")
 
-    def postConstruct(self):
+    def postConstruct(self, contextThread: ContextThreads):
         """
         Starts the event handler thread if it is enabled.
         """
-        if self._enabled:
-            self.start()
+        contextThread.add_thread(self)
+        self.start()
 
     def registerEvent(self, event: Event):
         """
