@@ -4,19 +4,25 @@ import threading
 from cndi.annotations import beans, Component, getBeanObject, ConditionalRendering
 from cndi.annotations.threads import ContextThreads
 from cndi.env import getContextEnvironment
+from cndi.healthchecks import BeanHealthChecker, ChannelHealthChecker
 from cndi.utils import logger
 
 def managementServerSupported(x):
     try:
         from flask import Flask
         from werkzeug.serving import run_simple
-        return getContextEnvironment("rcn.management.server.enabled", defaultValue=False, castFunc=bool)
+        return getContextEnvironment("rcn.management.server.enabled", defaultValue=False, castFunc=bool) \
+            and ContextThreads.isEnabled(f"{ManagementServer.__module__}.{ManagementServer.__qualname__}")
     except ImportError:
         return False
 
 @Component
 @ConditionalRendering(callback=managementServerSupported)
 class ManagementServer:
+    def __init__(self, channelHealthChecker: ChannelHealthChecker):
+        self.healthChecker = BeanHealthChecker()
+        self.channelHealthChecker = channelHealthChecker
+
     def registerEndpoints(self, flaskApp):
         from flask import jsonify
 
@@ -32,9 +38,17 @@ class ManagementServer:
                     "name": bean['name'],
                     'newInstance': bean['newInstance'],
                     'fullname': bean['fullname'],
-                    'index': bean['index']
+                    'index': bean['index'],
+                    "health": None if bean['newInstance'] else self.healthChecker.check(bean['name'])
                 })
             return jsonify(beans=targetResponse)
+
+        @flaskApp.route("/management/channels")
+        def managementChannels():
+            return jsonify(
+                channels=self.channelHealthChecker.check()
+            )
+
 
     def run(self):
         from flask import Flask

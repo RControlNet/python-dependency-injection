@@ -11,6 +11,7 @@ from cndi.env import loadEnvFromFile, getContextEnvironment
 from cndi.flask.flask_app import FlaskApplication
 from cndi.http.management import ManagementServer
 from cndi.utils import importSubModules
+from cndi.version import VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +25,9 @@ class AppInitializer:
         """
         Responsible to initialise Dependency Injection for Application
         """
+        logger.info(f"CNDI Version: v{VERSION}")
         self.componentsPath = list()
         applicationYml = "resources/application.yml"
-        self.managementServer = ManagementServer()
 
         if os.path.exists(applicationYml):
             logger.info(f"External Configuration found: {applicationYml}")
@@ -107,7 +108,7 @@ class AppInitializer:
         defaultMessageBinder = None
 
         if messageBinderEnabled:
-            defaultMessageBinder = DefaultMessageBinder()
+            defaultMessageBinder = getBeanObject(".".join([DefaultMessageBinder.__module__, DefaultMessageBinder.__name__]))
             defaultMessageBinder.performInjection()
 
         for autowire in autowires:

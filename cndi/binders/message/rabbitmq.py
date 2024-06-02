@@ -46,7 +46,11 @@ class RabbitMQSubscriberChannel(SubscriberChannel):
 
 
 
-class RabbitMQBinder():
+class RabbitMQBinder:
+    @staticmethod
+    def name():
+        return "rabbitmq"
+
     def __init__(self):
         self.logger = logging.getLogger('.'.join([self.__class__.__module__, self.__class__.__name__]))
         brokerUrl = getContextEnvironment("rcn.binders.message.rabbitmq.brokerUrl", defaultValue=None)
@@ -71,9 +75,30 @@ class RabbitMQBinder():
         self.channel = self.connection.channel()
 
         self.channelThread = Thread(target=self.channel.start_consuming)
+        self.producers = {}
+        self.consumers = {}
 
     def stopConsumers(self):
         self.channel.stop_consuming()
+
+    def info(self):
+        producers = []
+        consumers = []
+        for channel, producerBinding in self.producers.items():
+            producers.append(dict(
+                channel=channel,
+                topic=producerBinding.topic
+            ))
+
+        for channel, consumerBinding in self.consumers.items():
+            consumers.append(dict(
+                channel = channel
+            ))
+        return dict(
+            producers = producers
+        )
+    def health(self):
+        return self.channel.is_open and self.connection.is_open
 
     def bindSubscribers(self, CHANNELS_TO_FUNC_MAP):
         subscriptionTopics = list()
@@ -108,6 +133,7 @@ class RabbitMQBinder():
 
             self.channel.basic_consume(queue=topicName + consumerGroup, auto_ack=True, on_message_callback=consumerMessage)
 
+        self.consumers = binders
         return binders
 
     def bindProducers(self):
@@ -121,5 +147,5 @@ class RabbitMQBinder():
             producerBinding.setTopic(topicName)
             self.CHANNELS_TO_TOPIC_MAP[channelName] = topicName
             binders[channelName] = producerBinding
-
+        self.producers=binders
         return binders

@@ -26,6 +26,7 @@ class Message:
         self.key = key
         return self
 
+
 def Input(channelName):
     def inner_function(func):
         CHANNELS_TO_FUNC_MAP[channelName] = dict(func=func, annotations=func.__annotations__, is_sink=False)
@@ -51,14 +52,14 @@ def _conditionalRenderDefaultMessageBinder(wrapper):
 @Component
 @ConditionalRendering(callback=_conditionalRenderDefaultMessageBinder)
 class DefaultMessageBinder:
-    def   __init__(self):
+    def __init__(self):
         self.logger = logging.getLogger('.'.join([self.__class__.__module__, self.__class__.__name__]))
 
         self.binders = dict()
         self.topicConsumers = dict()
         self.callbacks = list()
         self.defaultMessageBinder = getContextEnvironment("rcn.binders.message.default")
-        self.initializeBinders()
+        self.channelBinders = self.initializeBinders()
 
     def start(self):
         for callback in self.callbacks:
@@ -79,7 +80,7 @@ class DefaultMessageBinder:
 
     def initializeBinders(self):
         contextEnvs = getContextEnvironments()
-
+        channelBinders = dict()
         if self.defaultMessageBinder.strip().lower() == "rabbitmq":
             from cndi.binders.message.rabbitmq import RabbitMQProducerBinding, RabbitMQBinder
 
@@ -88,6 +89,8 @@ class DefaultMessageBinder:
             self.binders.update(rabbitMqBinder.bindProducers())
             self.binders.update(rabbitMqBinder.bindSubscribers(CHANNELS_TO_FUNC_MAP=CHANNELS_TO_FUNC_MAP))
             self.callbacks.append(rabbitMqBinder.channelThread.start)
+
+            channelBinders[rabbitMqBinder.name()] = rabbitMqBinder
 
         elif self.defaultMessageBinder.strip().lower() == "mqtt":
             from cndi.binders.message.mqtt import MqttProducerBinding
@@ -145,3 +148,5 @@ class DefaultMessageBinder:
 
             mqttClient.connect(brokerUrl, brokerPort)
             self.callbacks.append(mqttClient.loop_start)
+
+        return channelBinders

@@ -1,15 +1,29 @@
+import logging
 from threading import Thread
 from typing import List
 
 from cndi.annotations import Component, ConditionalRendering
 from cndi.env import getContextEnvironment
 
+enableContextThreadProperty = "management.context.thread.enable"
+
+log = logging.getLogger(__name__)
 
 @Component
-@ConditionalRendering(callback=lambda x: getContextEnvironment("management.context.thread.enable", defaultValue=False, castFunc=bool))
+@ConditionalRendering(callback=lambda x: getContextEnvironment(enableContextThreadProperty, defaultValue=False, castFunc=bool))
 class ContextThreads:
     def __init__(self):
         self.threads: List[Thread] = list()
+
+    @staticmethod
+    def isEnabled(dependent):
+        enabled = getContextEnvironment(enableContextThreadProperty, defaultValue=False, castFunc=bool)
+        if not enabled:
+            log.warning(f"{dependent} Component depends on {__name__}.{ContextThreads.__name__}")
+            log.warning(f"Context Threads is disable in property please enable it by setting {enableContextThreadProperty} to true")
+
+        return enabled
+
 
     def add_thread(self, thread):
         self.threads.append(thread)

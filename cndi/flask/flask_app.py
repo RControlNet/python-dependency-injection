@@ -4,6 +4,8 @@ import threading
 
 from cndi.annotations import Component, ConditionalRendering, getBeanObject
 from cndi.annotations.threads import ContextThreads
+from cndi.consts import RCN_FLASK_APP_ENABLED, RCN_FLASK_APP_NAME, RCN_FLASK_APP_PORT, RCN_FLASK_APP_LISTEN, \
+    RCN_FLASK_APP_CONTEXT_URL, RCN_FLASK_APP_CONFIGS_LIST, RCN_FLASK_APP_BACKEND_SERVER
 from cndi.env import getContextEnvironment, getContextEnvironments
 
 logger = logging.getLogger(__name__)
@@ -19,7 +21,8 @@ def __check_flask_enabled__(x):
     """
     try:
         from flask import Flask
-        return getContextEnvironment("app.flask.enabled", castFunc=bool, defaultValue=False);
+        return getContextEnvironment(RCN_FLASK_APP_ENABLED, castFunc=bool, defaultValue=False) \
+            and ContextThreads.isEnabled(f"{FlaskApplication.__module__}.{FlaskApplication.__qualname__}")
     except ImportError:
         return False
 
@@ -49,13 +52,13 @@ class FlaskApplication:
         The application's name, port, host, debug mode, and configuration settings are retrieved from the environment.
         """
         from flask import Flask, Blueprint
-        self.appName = getContextEnvironment("app.flask.name", defaultValue="app")
-        self.port = getContextEnvironment("app.flask.port", defaultValue=8080, castFunc=int)
-        self.host = getContextEnvironment("app.flask.listen", defaultValue="0.0.0.0")
-        self.contextUrl = getContextEnvironment("app.flask.contextUrl", defaultValue="/")
+        self.appName = getContextEnvironment(RCN_FLASK_APP_NAME, defaultValue="app")
+        self.port = getContextEnvironment(RCN_FLASK_APP_PORT, defaultValue=8080, castFunc=int)
+        self.host = getContextEnvironment(RCN_FLASK_APP_LISTEN, defaultValue="0.0.0.0")
+        self.contextUrl = getContextEnvironment(RCN_FLASK_APP_CONTEXT_URL, defaultValue="/")
         contextEnvs = getContextEnvironments()
-        self.configs = dict(map(lambda items: (items[0]['app.flask.configs.'.__len__():], items[1]),
-                                filter(lambda items: items[0].startswith('app.flask.configs'), contextEnvs.items())))
+        self.configs = dict(map(lambda items: (items[0][f'{RCN_FLASK_APP_CONFIGS_LIST}.'.__len__():], items[1]),
+                                filter(lambda items: items[0].startswith(RCN_FLASK_APP_CONFIGS_LIST), contextEnvs.items())))
 
         self.__app = Flask(self.appName)
         self.app = Blueprint(self.appName, __name__)
@@ -78,14 +81,25 @@ class FlaskApplication:
 
         self.__app.register_blueprint(self.app, url_prefix=self.contextUrl)
 
-        from werkzeug import run_simple
-        logger.info(f"Starting Flask Server at {self.host}:{self.port} on Context URL: {self.contextUrl}")
-        serverThread = threading.Thread(name="thread-" + self.appName, target=run_simple, kwargs={
-            "hostname": self.host,
-            "port": self.port,
-            "application": self.__app,
-            **self.configs
-        })
+        backend = getContextEnvironment(RCN_FLASK_APP_BACKEND_SERVER, defaultValue="werkzeug")
+        logger.info(f"Starting Flask Server at {self.host}:{self.port} at Context URL: {self.contextUrl} on Backend {backend}")
+
+        if backend == "werkzeug":
+            from werkzeug import run_simple
+            serverThread = threading.Thread(name=f"thread-{self.appName}", target=run_simple, kwargs={
+                "hostname": self.host,
+                "port": self.port,
+                "application": self.__app,
+                **self.configs
+            })
+        elif backend == "waitress":
+            from waitress import serve
+            serverThread = threading.Thread(name=f"thread-{self.appName}", target=serve, kwargs={
+                "host": self.host,
+                "port": self.port,
+                "app": self.__app,
+                **self.configs
+            })
 
         contextThread: ContextThreads = getBeanObject('.'.join([ContextThreads.__module__ , ContextThreads.__name__]))
         contextThread.add_thread(serverThread)
