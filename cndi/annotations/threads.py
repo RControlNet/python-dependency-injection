@@ -9,21 +9,19 @@ enableContextThreadProperty = "management.context.thread.enable"
 
 log = logging.getLogger(__name__)
 
+def isContextThreadEnable(dependent):
+    enabled = getContextEnvironment(enableContextThreadProperty, defaultValue=False, castFunc=bool)
+    if not enabled:
+        log.warning(f"{dependent} Component depends on {__name__}.{ContextThreads.__name__}")
+        log.warning(f"Context Threads is disable in property please enable it by setting {enableContextThreadProperty} to true")
+
+    return enabled
+
 @Component
 @ConditionalRendering(callback=lambda x: getContextEnvironment(enableContextThreadProperty, defaultValue=False, castFunc=bool))
 class ContextThreads:
     def __init__(self):
         self.threads: List[Thread] = list()
-
-    @staticmethod
-    def isEnabled(dependent):
-        enabled = getContextEnvironment(enableContextThreadProperty, defaultValue=False, castFunc=bool)
-        if not enabled:
-            log.warning(f"{dependent} Component depends on {__name__}.{ContextThreads.__name__}")
-            log.warning(f"Context Threads is disable in property please enable it by setting {enableContextThreadProperty} to true")
-
-        return enabled
-
 
     def add_thread(self, thread):
         self.threads.append(thread)

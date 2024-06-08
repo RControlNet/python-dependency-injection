@@ -3,7 +3,7 @@ import threading
 
 
 from cndi.annotations import Component, ConditionalRendering, getBeanObject
-from cndi.annotations.threads import ContextThreads
+from cndi.annotations.threads import ContextThreads, isContextThreadEnable
 from cndi.consts import RCN_FLASK_APP_ENABLED, RCN_FLASK_APP_NAME, RCN_FLASK_APP_PORT, RCN_FLASK_APP_LISTEN, \
     RCN_FLASK_APP_CONTEXT_URL, RCN_FLASK_APP_CONFIGS_LIST, RCN_FLASK_APP_BACKEND_SERVER
 from cndi.env import getContextEnvironment, getContextEnvironments
@@ -22,7 +22,7 @@ def __check_flask_enabled__(x):
     try:
         from flask import Flask
         return getContextEnvironment(RCN_FLASK_APP_ENABLED, castFunc=bool, defaultValue=False) \
-            and ContextThreads.isEnabled(f"{FlaskApplication.__module__}.{FlaskApplication.__qualname__}")
+            and isContextThreadEnable(f"{FlaskApplication.__module__}.{FlaskApplication.__qualname__}")
     except ImportError:
         return False
 

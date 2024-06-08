@@ -8,6 +8,7 @@ import logging
 from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, getBean, \
     validateBean, queryOverideBeanStore, validatedBeans
 from cndi.env import loadEnvFromFile, getContextEnvironment
+from cndi.exception import BeanNotFoundException
 from cndi.flask.flask_app import FlaskApplication
 from cndi.http.management import ManagementServer
 from cndi.utils import importSubModules
@@ -89,6 +90,7 @@ class AppInitializer:
 
             componentStore[component.fullname] = component
             kwargs = constructKeyWordArguments(component.annotations)
+            logger.info("Initializing")
             objectInstance = component.func(**kwargs)
             if 'postConstruct' in dir(objectInstance):
                 postConstructKArgs = constructKeyWordArguments(objectInstance.postConstruct.__annotations__)
@@ -126,6 +128,11 @@ class AppInitializer:
 def constructKeyWordArguments(annotations):
     kwargs = dict()
     for key, classObject in annotations.items():
-        tempBean = beanStore[f"{classObject.__module__}.{classObject.__name__}"]
-        kwargs[key] = copy.deepcopy(tempBean['object']) if tempBean['newInstance'] else tempBean['object']
+        beanName = f"{classObject.__module__}.{classObject.__name__}"
+        if beanName in beanStore:
+            tempBean = beanStore[beanName]
+            kwargs[key] = copy.deepcopy(tempBean['object']) if tempBean['newInstance'] else tempBean['object']
+        else:
+            raise BeanNotFoundException(f"Following Bean failed to load in Context: "+beanName)
+
     return kwargs

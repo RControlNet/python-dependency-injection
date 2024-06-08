@@ -2,7 +2,7 @@ import threading
 
 
 from cndi.annotations import beans, Component, getBeanObject, ConditionalRendering
-from cndi.annotations.threads import ContextThreads
+from cndi.annotations.threads import ContextThreads, isContextThreadEnable
 from cndi.env import getContextEnvironment
 from cndi.healthchecks import BeanHealthChecker, ChannelHealthChecker
 from cndi.utils import logger
@@ -12,7 +12,7 @@ def managementServerSupported(x):
         from flask import Flask
         from werkzeug.serving import run_simple
         return getContextEnvironment("rcn.management.server.enabled", defaultValue=False, castFunc=bool) \
-            and ContextThreads.isEnabled(f"{ManagementServer.__module__}.{ManagementServer.__qualname__}")
+            and isContextThreadEnable(f"{ManagementServer.__module__}.{ManagementServer.__qualname__}")
     except ImportError:
         return False
 
