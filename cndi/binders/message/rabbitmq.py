@@ -122,6 +122,7 @@ class RabbitMQBinder:
             callback = callbackDetails['func']
             consumerBinding.setOnConsumeCallback(callback)
             topicName = getContextEnvironment(propertyKey, required=True)
+            routing_key = getContextEnvironment(f"{binderPath}.routing_key", defaultValue=topicName)
             subscriptionTopics.append(topicName)
 
             consumerBinding.setTopic(topicName, group=consumerGroup)
@@ -131,8 +132,10 @@ class RabbitMQBinder:
             topicConsumers[topicName] = consumerBinding
             binders[channelName] = consumerBinding
 
+            queue = f"{topicName}.{consumerGroup}"
 
-            self.channel.basic_consume(queue=topicName, auto_ack=True, on_message_callback=consumerMessage)
+            self.channel.queue_bind(queue=queue, exchange=topicName, routing_key=routing_key)
+            self.channel.basic_consume(queue=queue, auto_ack=True, on_message_callback=consumerMessage)
 
         self.consumers = binders
         return binders
