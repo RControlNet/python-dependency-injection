@@ -65,7 +65,7 @@ class RabbitMQBinder:
 
         contextEnvs = getContextEnvironments()
         credentials = pika.PlainCredentials(user,  userSecret)
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=brokerUrl, port=brokerPort, credentials=credentials))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=brokerUrl, port=brokerPort, credentials=credentials, heartbeat=60))
         self.rabbotmqProducerChannelBindings = filter(lambda key: key.startswith('rcn.binders.message.rabbitmq.producer'),
                                                  contextEnvs)
         self.mqttConsumerChannelBindings = filter(
@@ -131,7 +131,8 @@ class RabbitMQBinder:
             topicConsumers[topicName] = consumerBinding
             binders[channelName] = consumerBinding
 
-            self.channel.basic_consume(queue=topicName + consumerGroup, auto_ack=True, on_message_callback=consumerMessage)
+
+            self.channel.basic_consume(queue=topicName, auto_ack=True, on_message_callback=consumerMessage)
 
         self.consumers = binders
         return binders
