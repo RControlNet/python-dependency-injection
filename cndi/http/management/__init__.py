@@ -19,9 +19,9 @@ def managementServerSupported(x):
 @Component
 @ConditionalRendering(callback=managementServerSupported)
 class ManagementServer:
-    def __init__(self, channelHealthChecker: ChannelHealthChecker):
+    def __init__(self):
         self.healthChecker = BeanHealthChecker()
-        self.channelHealthChecker = channelHealthChecker
+        # self.channelHealthChecker = channelHealthChecker
 
     def registerEndpoints(self, flaskApp):
         from flask import jsonify
@@ -43,11 +43,11 @@ class ManagementServer:
                 })
             return jsonify(beans=targetResponse)
 
-        @flaskApp.route("/management/channels")
-        def managementChannels():
-            return jsonify(
-                channels=self.channelHealthChecker.check()
-            )
+        # @flaskApp.route("/management/channels")
+        # def managementChannels():
+        #     return jsonify(
+        #         channels=self.channelHealthChecker.check()
+        #     )
 
 
     def run(self):

@@ -27,6 +27,11 @@ class AppInitializer:
         Responsible to initialise Dependency Injection for Application
         """
         logger.info(f"CNDI Version: v{VERSION}")
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+        except ImportError as e:
+            logger.error(e)
         self.componentsPath = list()
         applicationYml = "resources/application.yml"
 
@@ -89,6 +94,7 @@ class AppInitializer:
                 continue
 
             componentStore[component.fullname] = component
+            logger.info(f"Building Component: {component.fullname}")
             kwargs = constructKeyWordArguments(component.annotations)
             logger.info("Initializing")
             objectInstance = component.func(**kwargs)
