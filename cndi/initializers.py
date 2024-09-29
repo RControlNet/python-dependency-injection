@@ -7,7 +7,7 @@ import logging
 
 from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, getBean, \
     validateBean, queryOverideBeanStore, validatedBeans
-from cndi.env import loadEnvFromFile, getContextEnvironment
+from cndi.env import loadEnvFromFile, getContextEnvironment, reload_envs
 from cndi.exception import BeanNotFoundException
 from cndi.flask.flask_app import FlaskApplication
 from cndi.http.management import ManagementServer
@@ -29,7 +29,8 @@ class AppInitializer:
         logger.info(f"CNDI Version: v{VERSION}")
         try:
             from dotenv import load_dotenv
-            load_dotenv()
+            load_dotenv("./.env")
+            reload_envs()
         except ImportError as e:
             logger.error(e)
         self.componentsPath = list()

@@ -21,7 +21,12 @@ configDir = os.environ[f"{BASE_NAME}_HOME"]
 if RCN_ACTIVE_PROFILE not in os.environ:
     os.environ[RCN_ACTIVE_PROFILE] = "default"
 
-VARS = dict(map(lambda key: (key,os.environ[key]), filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ)))
+def reload_envs():
+    return dict(map(lambda key: (key, os.environ[key]),
+             filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ)))
+
+
+VARS = reload_envs()
 
 def loadEnvsFromRcnHome():
     profile = getConfiguredProfile()
@@ -114,6 +119,7 @@ def getListTypeContextEnvironments():
     rcn_envs = getContextEnvironments()
     dataDict = dict(filter(lambda key: key[0].__contains__(".#"), rcn_envs.items()))
     return dataDict
+
 
 def getContextEnvironment(key: str, defaultValue = None, castFunc = None, required=True):
     """
