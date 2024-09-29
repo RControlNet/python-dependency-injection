@@ -21,12 +21,14 @@ configDir = os.environ[f"{BASE_NAME}_HOME"]
 if RCN_ACTIVE_PROFILE not in os.environ:
     os.environ[RCN_ACTIVE_PROFILE] = "default"
 
+VARS = dict()
+
 def reload_envs():
-    return dict(map(lambda key: (key, os.environ[key]),
-             filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ)))
+    VARS.clear()
+    VARS.update(tuple(map(lambda key: (key, os.environ[key]),
+             filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ))))
 
-
-VARS = reload_envs()
+reload_envs()
 
 def loadEnvsFromRcnHome():
     profile = getConfiguredProfile()
