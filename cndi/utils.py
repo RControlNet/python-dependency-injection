@@ -1,7 +1,12 @@
 import os
 import importlib
+from re import template
+from uuid import uuid4
+
 from importlib._bootstrap_external import _NamespacePath
 import logging
+
+from cndi.env import getContextEnvironment
 
 logger = logging.getLogger("cndi.utils")
 
@@ -45,3 +50,26 @@ def importSubModules(module, skipModules=[], callback=None):
         moduleInstance = importlib.import_module(m)
         if callback is not None:
             callback(moduleInstance)
+
+
+class File:
+    def __init__(self, path, tempFile=False):
+        self.path = path
+        self.tempFile = tempFile
+    def resolveChildren(self, childName):
+        childPath = os.path.join(self.path, childName)
+        return File(childPath, tempFile=self.tempFile)
+    def mkdir(self):
+        os.path.makedirs(self.path)
+
+def tempfile(content: str):
+    filename = uuid4().__str__()
+    tempDir = getContextEnvironment("rcn.tempdir", "./tmp")
+    if (os.path.exists(tempDir)):
+        os.makedirs(tempDir)
+
+    tempFile = File(os.path.join(tempDir, filename), tempFile=True)
+    with open(tempFile.path, "w") as file:
+        file.write(content)
+
+    return tempFile
