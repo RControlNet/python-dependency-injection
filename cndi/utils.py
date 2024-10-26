@@ -1,6 +1,5 @@
 import os
 import importlib
-from re import template
 from uuid import uuid4
 
 from importlib._bootstrap_external import _NamespacePath
@@ -53,14 +52,20 @@ def importSubModules(module, skipModules=[], callback=None):
 
 
 class File:
-    def __init__(self, path, tempFile=False):
+    def __init__(self, path, tempFile=False, isFile=False):
         self.path = path
+        self.isFile = isFile
+        self.parentDir = os.path.dirname(self.path)
         self.tempFile = tempFile
-    def resolveChildren(self, childName):
-        childPath = os.path.join(self.path, childName)
-        return File(childPath, tempFile=self.tempFile)
+    def resolveChildren(self, childName, **kwargs):
+        childPath = os.path.normpath(os.path.join(self.path, childName))
+        return File(childPath, tempFile=self.tempFile, **kwargs)
     def mkdir(self):
-        os.path.makedirs(self.path)
+        if not os.path.exists(self.parentDir):
+            os.makedirs(self.parentDir)
+
+        if not self.isFile and not os.path.exists(self.path):
+            os.mkdir(self.path)
 
 def tempfile(content: str):
     filename = uuid4().__str__()
