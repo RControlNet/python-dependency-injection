@@ -11,7 +11,7 @@ test_module/__pycache__/TestModule.cpython-36.pyc
 tests/__pycache__/
 tests/cndi/__pycache__/
 tests/cndi/annotations/__pycache__/
-
+.venv
 .idea
 .pytest_cache
 dist

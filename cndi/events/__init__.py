@@ -43,6 +43,7 @@ class EventHandler(threading.Thread):
         threading.Thread.__init__(self)
         self.logger = logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}")
         self.EVENTS_MAP = dict()
+        self._enabled = getContextEnvironment(RCN_EVENTS_ENABLE, defaultValue=False, castFunc=bool)
         self.sleepwait = getContextEnvironment(RCN_EVENTS_WAITTIME, defaultValue=2.0, castFunc=float)
         self.expectedInvokerTime = getContextEnvironment(RCN_EVENTS_INVOKER_SLEEP_TIME, defaultValue=0.003, castFunc=float)
         self.logger.debug(f"Expected Invoker Time set to {self.expectedInvokerTime} seconds")
