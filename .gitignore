@@ -16,3 +16,5 @@ tests/cndi/annotations/__pycache__/
 .pytest_cache
 dist
 build
+*.iml
+uv.lock

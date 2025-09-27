@@ -80,10 +80,12 @@ def loadEnvFromFiles(*files):
         loadEnvFromFile(file)
 
 def getConfiguredProfile():
-    if f"{RCN_ENVS_CONFIG}.active.profile".lower() in VARS:
-        return VARS[f"{RCN_ENVS_CONFIG}.active.profile".lower()]
+    if RCN_ACTIVE_PROFILE.lower() in VARS:
+        return VARS[RCN_ACTIVE_PROFILE.lower()]
     elif "rcn.active.profile" in os.environ:
         return os.environ["rcn.active.profile"]
+    elif "RCN_PROFILE" in os.environ:
+        return os.environ["RCN_PROFILE"]
     else:
         return "default"
 

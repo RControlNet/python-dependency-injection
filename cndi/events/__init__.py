@@ -2,7 +2,7 @@ import threading
 import time
 import logging
 
-from cndi.annotations import Component, getBeanObject, ConditionalRendering
+from cndi.annotations import Component, ConditionalRendering
 from cndi.annotations.threads import ContextThreads
 from cndi.consts import RCN_EVENTS_ENABLE, RCN_EVENTS_WAITTIME, RCN_EVENTS_INVOKER_SLEEP_TIME
 from cndi.env import getContextEnvironment

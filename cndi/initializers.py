@@ -7,7 +7,7 @@ import logging
 
 from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, getBean, \
     validateBean, queryOverideBeanStore, validatedBeans
-from cndi.env import loadEnvFromFile, getContextEnvironment, reload_envs
+from cndi.env import loadEnvFromFile, getContextEnvironment, reload_envs, getConfiguredProfile
 from cndi.exception import BeanNotFoundException
 from cndi.flask.flask_app import FlaskApplication
 from cndi.http.management import ManagementServer
@@ -26,7 +26,10 @@ class AppInitializer:
         """
         Responsible to initialise Dependency Injection for Application
         """
+
+        profile = getConfiguredProfile()
         logger.info(f"CNDI Version: v{VERSION}")
+        logger.info(f"Configured Profile: {profile}")
         try:
             from dotenv import load_dotenv
             load_dotenv("./.env")
@@ -39,7 +42,6 @@ class AppInitializer:
         if os.path.exists(applicationYml):
             logger.info(f"External Configuration found: {applicationYml}")
             loadEnvFromFile(applicationYml)
-
 
     def componentScan(self, module):
         importModule = importlib.import_module(module)
