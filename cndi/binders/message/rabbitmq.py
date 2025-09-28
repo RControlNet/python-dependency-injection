@@ -161,3 +161,4 @@ try:
             return binders
 except ModuleNotFoundError:
     logger.warning("RabbitMQ Binder not loaded")
+    RabbitMQBinder = None
