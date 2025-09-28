@@ -139,8 +139,7 @@ def constructKeyWordArguments(annotations):
     for key, classObject in annotations.items():
         beanName = f"{classObject.__module__}.{classObject.__name__}"
         if beanName in beanStore:
-            tempBean = beanStore[beanName]
-            kwargs[key] = copy.deepcopy(tempBean['object']) if tempBean['newInstance'] else tempBean['object']
+            kwargs[key] = getBeanObject(beanName)
         else:
             raise BeanNotFoundException(f"Following Bean failed to load in Context: "+beanName)
 
