@@ -159,5 +159,5 @@ try:
                 binders[channelName] = producerBinding
             self.producers = binders
             return binders
-except ImportError:
+except ModuleNotFoundError:
     logger.warning("RabbitMQ Binder not loaded")
