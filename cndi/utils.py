@@ -45,6 +45,7 @@ def importSubModules(module, skipModules=[], callback=None):
         if len(list(filter(lambda x: m.startswith(x), skipModules))) > 0:
             logger.warning(f"Skipping ImportModule: {m}")
             continue
+        m = m.replace("/", ".")
         logger.info(f"Importing: {m}")
         moduleInstance = importlib.import_module(m)
         if callback is not None:
