@@ -13,5 +13,8 @@ class InjectBeanComponent:
 
         assert type(self.bean) is TestBean
 
+def complete(testBean: TestBean):
+    print("Start up Completed ", testBean)
+
 app = AppInitializer()
-app.run()
+app.run(onComplete=complete)

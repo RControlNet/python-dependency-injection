@@ -11,6 +11,8 @@ def addEndpoints(flaskApp: FlaskApplication):
     def serve():
         return jsonify(request.json)
 
+def complete(flaskApp: FlaskApplication):
+    print("Start up Completed ", flaskApp)
 if __name__ == '__main__':
     addToOsEnviron("app.flask.enabled", "true")                     # Enable Flask App
     addToOsEnviron("rcn.management.server.enabled", "true")         # Enable Management and Health Endpoint
@@ -19,4 +21,4 @@ if __name__ == '__main__':
 
     app = AppInitializer()
     app.componentScan("cndi.flask")
-    app.run()
+    app.run(onComplete=complete)

@@ -48,7 +48,7 @@ class AppInitializer:
         self.componentsPath.append(importModule)
 
 
-    def run(self):
+    def run(self, onComplete = lambda: logger.info("Start Up Complete")):
         """
         Performing Dependency Injection, on priority basis
         Steps Involved in DI
@@ -132,6 +132,9 @@ class AppInitializer:
             if componentName in initializerComponents:
                 objectInstance = getBeanObject(componentName)
                 componentClass.func.run(objectInstance)
+
+        kwargs = constructKeyWordArguments(onComplete.__annotations__)
+        onComplete(**kwargs)
 
 
 def constructKeyWordArguments(annotations):
