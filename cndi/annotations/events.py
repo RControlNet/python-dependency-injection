@@ -47,9 +47,12 @@ class EventExecutor:
     def register(self, event: Event):
         REGISTERED_EVENTS[event.eventType] = event
 
-    def execute(self, event: str, **override_kwargs):
+    def execute(self, event: str, required=True, **override_kwargs):
         if event not in REGISTERED_EVENTS:
-            raise EventNotFound(f"{event} not found, please check the decorators")
+            if required:
+                raise EventNotFound(f"{event} not found, please check the decorators")
+            else:
+                return None
 
         event_objs = REGISTERED_EVENTS.get(event)
         for func_name, event_obj in event_objs.items():
