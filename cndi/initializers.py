@@ -6,7 +6,7 @@ from cndi.binders.message import DefaultMessageBinder
 import logging
 
 from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, getBean, \
-    validateBean, queryOverideBeanStore, validatedBeans
+    validateBean, queryOverideBeanStore, validatedBeans, constructKeyWordArguments
 from cndi.env import loadEnvFromFile, getContextEnvironment, reload_envs, getConfiguredProfile
 from cndi.exception import BeanNotFoundException
 from cndi.flask.flask_app import FlaskApplication
@@ -135,15 +135,3 @@ class AppInitializer:
 
         kwargs = constructKeyWordArguments(onComplete.__annotations__)
         onComplete(**kwargs)
-
-
-def constructKeyWordArguments(annotations):
-    kwargs = dict()
-    for key, classObject in annotations.items():
-        beanName = f"{classObject.__module__}.{classObject.__name__}"
-        if beanName in beanStore:
-            kwargs[key] = getBeanObject(beanName)
-        else:
-            raise BeanNotFoundException(f"Following Bean failed to load in Context: "+beanName)
-
-    return kwargs

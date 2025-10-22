@@ -25,6 +25,7 @@ from cndi.annotations.component import ComponentClass
 import logging
 
 from cndi.env import RCN_ACTIVE_PROFILE
+from cndi.exception import BeanNotFoundException
 
 logger = logging.getLogger("cndi.annotations")
 
@@ -287,6 +288,17 @@ def queryContitionalRenderingStore(fullname):
     else:
         return None
 
+def constructKeyWordArguments(annotations, required=True):
+    kwargs = dict()
+    for key, classObject in annotations.items():
+        beanName = f"{classObject.__module__}.{classObject.__name__}"
+        if beanName in beanStore:
+            kwargs[key] = getBeanObject(beanName)
+        elif required:
+            raise BeanNotFoundException(f"Following Bean failed to load in Context: "+beanName)
+        else:
+            logger.warn(f"Bean not found {beanName} and required is set to false")
+    return kwargs
 
 def Profile(profiles=["default"]):
     """
@@ -340,7 +352,6 @@ def Autowired(required=True):
         return wrapper
 
     return inner_function
-
 
 def getBean(beans, name):
     return list(filter(lambda x: x['name'] == name, beans))[0]
