@@ -22,7 +22,6 @@ def OnEvent(event):
     def inner_function(func):
         annotations = func.__annotations__
         func_name = '.'.join([func.__module__, func.__qualname__])
-        print(func_name)
         @wraps(func)
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
