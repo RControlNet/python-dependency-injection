@@ -55,6 +55,7 @@ class EventExecutor:
                 return None
 
         event_objs = REGISTERED_EVENTS.get(event)
+        response = dict()
         for func_name, event_obj in event_objs.items():
             logger.debug(f"Event call started on {func_name}")
 
@@ -63,5 +64,6 @@ class EventExecutor:
                 **override_kwargs
             }
             kwargs = dict(map(lambda x: [x, kwargs[x]],set(event_obj.kwargs.keys()).intersection(kwargs.keys())))
-            event_obj.eventCallback(**kwargs)
+            response[func_name] = event_obj.eventCallback(**kwargs)
             logger.debug(f"Event call completed on {func_name}")
+        return response
