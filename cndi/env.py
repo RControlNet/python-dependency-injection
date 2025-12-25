@@ -28,8 +28,6 @@ def reload_envs():
     VARS.update(tuple(map(lambda key: (key, os.environ[key]),
              filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ))))
 
-reload_envs()
-
 def loadEnvsFromRcnHome():
     profile = getConfiguredProfile()
     profileHome = os.path.join(configDir, profile)
