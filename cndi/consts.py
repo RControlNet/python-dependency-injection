@@ -12,3 +12,6 @@ RCN_FLASK_APP_BACKEND_SERVER = "app.flask.backend"
 
 RCN_AUTO_CONFIGURE_SECRETS_ENABLE = "app.autoconfiguration.secrets.enable"
 RCN_ENABLE_VAULT_PROVIDER = "secrets.provider.vault.enable"
+
+RCN_ENABLE_STANDALONE_MESSAGE_BROKER = "rcn.message.brokers.standalone.enable"
+RCN_ENABLE_CONTEXT_THREADS = "management.context.thread.enable"
