@@ -14,7 +14,7 @@ os.environ[RCN_ENVS_CONFIG + '.' + "task.executor.enable"] = "True"
 
 def test_task():
     print("Test Task Executed")
-    return "Completed"
+    raise Exception("Test Task Failed")
 
 @Autowired()
 def set_task_executor(task_executor: TaskExecutor):
@@ -25,7 +25,7 @@ def set_task_executor(task_executor: TaskExecutor):
     time.sleep(5)
 
     _task = task_executor.get_task(task.id)
-    print("Executed Task Result: ", _task.result)
+    print("Executed Task Result: ", _task.result, _task.status)
 
 
 if __name__ == '__main__':
