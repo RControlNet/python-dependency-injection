@@ -41,7 +41,7 @@ class TaskExecutor(threading.Thread):
         self.tasks = {}
         self.num_threads = getContextEnvironment(RCN_TASK_EXECUTOR_NUM_THREADS, defaultValue=1, castFunc=int)
         self.queue = Queue()
-        self.running = False
+        self.running = True
         context_threads.add_thread(self)
         self.start()
 
@@ -68,7 +68,7 @@ class TaskExecutor(threading.Thread):
             raise Exception(f"Task with name {id} not found")
 
     def run(self):
-        while True:
+        while self.running:
             queue_size = self.queue.qsize()
             tasks = []
             future_results = []
@@ -80,7 +80,6 @@ class TaskExecutor(threading.Thread):
                     for task in tasks:
                         future = executor.submit(self.execute, task.id)
                         task.status = TaskStatus.RUNNING
-                        task.running = True
                         future_results.append(dict(future=future, id=task.id))
 
                     executor.shutdown(wait=True)
@@ -88,7 +87,6 @@ class TaskExecutor(threading.Thread):
                     for future in future_results:
                         self.tasks[future['id']].result = future['future'].result() if future['future'].exception() is None else future['future'].exception()
                         self.tasks[future['id']].status = TaskStatus.COMPLETED if future['future'].exception() is None else TaskStatus.FAILED
-                        self.tasks[future['id']].running = False
 
                 logger.debug(f"Finished executing {tasks.__len__()} tasks")
             else:
