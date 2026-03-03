@@ -15,3 +15,6 @@ RCN_ENABLE_VAULT_PROVIDER = "secrets.provider.vault.enable"
 
 RCN_ENABLE_STANDALONE_MESSAGE_BROKER = "rcn.message.brokers.standalone.enable"
 RCN_ENABLE_CONTEXT_THREADS = "management.context.thread.enable"
+
+RCN_ENABLE_TASK_EXECUTOR = "task.executor.enable"
+RCN_TASK_EXECUTOR_NUM_THREADS = "task.executor.num.threads"
