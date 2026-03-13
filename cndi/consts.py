@@ -1,3 +1,6 @@
+RCN_LOGGING_ENABLE = "rcn.logging.enable"
+RCN_LOGGING_LEVEL = "rcn.logging.level"
+
 RCN_EVENTS_ENABLE = "rcn.events.enable"
 RCN_EVENTS_NUM_THREADS = "rcn.events.num.threads"
 

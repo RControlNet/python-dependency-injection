@@ -30,7 +30,6 @@ class AppInitializer:
         """
         Responsible to initialise Dependency Injection for Application
         """
-
         profile = getConfiguredProfile()
         logger.info(f"CNDI Version: v{VERSION}")
         logger.info(f"Configured Profile: {profile}")
@@ -46,6 +45,8 @@ class AppInitializer:
         if os.path.exists(applicationYml):
             logger.info(f"External Configuration found: {applicationYml}")
             loadEnvFromFile(applicationYml)
+
+
 
     def componentScan(self, module):
         importModule = importlib.import_module(module)
@@ -79,7 +80,7 @@ class AppInitializer:
         workOrderBeans = workOrder(validatedBeans)
 
         for bean in workOrderBeans:
-            logger.info(f"Registering Bean {bean['fullname']}")
+            logger.debug(f"Registering Bean {bean['fullname']}")
             kwargs = dict()
             for key, className in bean['kwargs'].items():
                 tempBean = beanStore[className]
@@ -101,9 +102,8 @@ class AppInitializer:
                 continue
 
             componentStore[component.fullname] = component
-            logger.info(f"Building Component: {component.fullname}")
+            logger.debug(f"Building Component: {component.fullname}")
             kwargs = constructKeyWordArguments(component.annotations)
-            logger.info("Initializing")
             objectInstance = component.func(**kwargs)
             if 'postConstruct' in dir(objectInstance):
                 postConstructKArgs = constructKeyWordArguments(objectInstance.postConstruct.__annotations__)

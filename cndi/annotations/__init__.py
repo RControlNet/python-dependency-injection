@@ -114,7 +114,7 @@ class AutowiredClass:
         if self.className in beanStore:
             self.func(beanStore[self.className], **args)
         else:
-            logger.info(f"{self.className} {self.fullname}")
+            logger.debug(f"{self.className} {self.fullname}")
             self.func(**args)
 
     def calculateDependencies(self):
@@ -172,10 +172,10 @@ def Component(func: object):
 
     moduleName = wrapper.__module__[:-9] if wrapper.__module__.endswith(".__init__") else wrapper.__module__
     componentFullName = '.'.join([moduleName, wrapper.__qualname__])
-    logger.info(f"Registering Function name " + componentFullName)
+    logger.debug(f"Registering Function name " + componentFullName)
     duplicateComponents = list(filter(lambda component: component.fullname == componentFullName, components))
     if duplicateComponents.__len__() > 0:
-        logger.info(f"Duplicate Component found for: {duplicateComponents}")
+        logger.debug(f"Duplicate Component found for: {duplicateComponents}")
     else:
         components.append(ComponentClass(**{
             'fullname': componentFullName,
@@ -211,7 +211,7 @@ def validateBean(fullname):
         flag &= bool(callbackValue)
 
     if flag is False:
-        logger.info("Validation Failed for Bean " + fullname)
+        logger.debug("Validation Failed for Bean " + fullname)
 
     return flag
 
