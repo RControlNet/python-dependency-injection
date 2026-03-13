@@ -1,6 +1,5 @@
-from threading import Thread
 import logging
-
+from threading import Thread
 
 from cndi.binders.message import Message, SubscriberChannel
 from cndi.binders.message.utils import extractChannelNameFromPropertyKey, MessageChannel

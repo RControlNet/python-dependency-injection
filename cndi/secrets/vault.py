@@ -1,3 +1,4 @@
+import logging
 import os
 
 from cndi.annotations import Component, ConditionalRendering
@@ -5,7 +6,6 @@ from cndi.autoconfiguration.configure import AutoConfigurationProviders
 from cndi.consts import RCN_ENABLE_VAULT_PROVIDER
 from cndi.env import getContextEnvironment, getContextEnvironments, RCN_ENVS_CONFIG, \
     reload_envs
-import logging
 
 logger = logging.getLogger(__name__)
 VAULT_PROVIDER_PREFIX = "vault://"

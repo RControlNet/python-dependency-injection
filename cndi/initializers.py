@@ -1,16 +1,14 @@
 import copy
 import importlib
+import logging
 import os
 
+from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, \
+    validateBean, queryOverideBeanStore, validatedBeans, constructKeyWordArguments
 from cndi.annotations.events import EventBus, BuiltInEventsTypes
 from cndi.binders.message import DefaultMessageBinder
-import logging
-
-from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, getBean, \
-    validateBean, queryOverideBeanStore, validatedBeans, constructKeyWordArguments
 from cndi.consts import RCN_EVENTS_ENABLE
 from cndi.env import loadEnvFromFile, getContextEnvironment, reload_envs, getConfiguredProfile
-from cndi.exception import BeanNotFoundException
 from cndi.flask.flask_app import FlaskApplication
 from cndi.http.management import ManagementServer
 from cndi.utils import importSubModules

@@ -19,11 +19,10 @@ Functions:
     normaliseModuleAndClassName: Normalizes a module and class name.
 """
 
+import logging
 import os
 
 from cndi.annotations.component import ComponentClass
-import logging
-
 from cndi.env import RCN_ACTIVE_PROFILE
 from cndi.exception import BeanNotFoundException
 

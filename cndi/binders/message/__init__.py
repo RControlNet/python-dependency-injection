@@ -1,10 +1,10 @@
+import logging
 from functools import wraps
 
 from cndi.annotations import getBeanObject, Component, ConditionalRendering
 from cndi.binders.consts import RCN_MESSAGE_BINDERS
 from cndi.binders.message.utils import extractChannelNameFromPropertyKey, SubscriberChannel
 from cndi.env import getContextEnvironment, getContextEnvironments
-import logging
 
 logger = logging.getLogger(__name__)
 

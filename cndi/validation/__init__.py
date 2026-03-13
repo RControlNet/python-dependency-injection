@@ -1,5 +1,3 @@
-from cndi.env import walkDictKey, normalize
-
 schema = {
     "type": "object",
     "properties": {

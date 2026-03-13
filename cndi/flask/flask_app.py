@@ -1,7 +1,6 @@
 import logging
 import threading
 
-
 from cndi.annotations import Component, ConditionalRendering, getBeanObject
 from cndi.annotations.threads import ContextThreads, isContextThreadEnable
 from cndi.consts import RCN_FLASK_APP_ENABLED, RCN_FLASK_APP_NAME, RCN_FLASK_APP_PORT, RCN_FLASK_APP_LISTEN, \

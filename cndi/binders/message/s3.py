@@ -1,10 +1,9 @@
+import logging
 import re
 import time
 from datetime import timedelta
 
-import logging
 from cndi.utils import File
-
 
 logger = logging.getLogger(__name__)
 

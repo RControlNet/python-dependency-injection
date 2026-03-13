@@ -1,9 +1,9 @@
+import asyncio
 import logging
-
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import wraps
-from typing import Dict, Callable, Optional
-import asyncio
+from typing import Dict, Callable
+
 from cndi.annotations import Component, constructKeyWordArguments, ConditionalRendering
 from cndi.consts import RCN_EVENTS_ENABLE, RCN_EVENTS_NUM_THREADS
 from cndi.env import getContextEnvironment

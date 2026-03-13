@@ -1,3 +1,4 @@
+import logging
 import threading
 import time
 import uuid
@@ -10,7 +11,6 @@ from cndi.annotations import Component, ConditionalRendering
 from cndi.annotations.threads import ContextThreads
 from cndi.consts import RCN_ENABLE_CONTEXT_THREADS, RCN_ENABLE_TASK_EXECUTOR, RCN_TASK_EXECUTOR_NUM_THREADS
 from cndi.env import getContextEnvironment
-import logging
 
 logger = logging.getLogger(__name__)
 

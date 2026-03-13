@@ -1,7 +1,9 @@
 import os
 from pathlib import Path
+
 import yaml
 from yaml import SafeLoader
+
 
 class BaseConfigGenerator:
     def __init__(self, sourceDir, destinationFile):

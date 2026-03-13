@@ -1,8 +1,9 @@
+import logging
+import os
+import re
 from pathlib import Path
 
 from yaml import SafeLoader, load_all
-import os, re
-import logging
 
 from cndi import BASE_NAME
 

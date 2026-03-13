@@ -1,7 +1,8 @@
+import logging
+
 from cndi.annotations import getBeanObject, Component, ConditionalRendering
 from cndi.binders.message import DefaultMessageBinder
 from cndi.env import getContextEnvironment
-import logging
 
 logger = logging.getLogger(__name__)
 try:
