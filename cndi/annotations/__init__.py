@@ -68,6 +68,8 @@ def getBeanObject(objectType):
     Returns:
         An instance of the bean of the specified type.
     """
+    if isinstance(objectType, type):
+        objectType = normaliseModuleAndClassName('.'.join([objectType.__module__, objectType.__name__]))
     bean = queryBeanStorage(objectType)
     objectInstance = bean['objectInstance']
     # if (objectInstance.__class__.__name__ == "function"):

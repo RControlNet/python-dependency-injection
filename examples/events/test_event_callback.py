@@ -1,4 +1,4 @@
-from cndi.annotations import Autowired, Component
+from cndi.annotations import Autowired, Component, Bean
 from cndi.annotations.events import OnEvent, EventBus, BuiltInEventsTypes
 from cndi.consts import RCN_ENABLE_STANDALONE_MESSAGE_BROKER, RCN_ENABLE_CONTEXT_THREADS, RCN_EVENTS_ENABLE
 from cndi.env import RCN_ENVS_CONFIG

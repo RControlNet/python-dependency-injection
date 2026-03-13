@@ -1,4 +1,5 @@
 import asyncio
+import dataclasses
 import logging
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import wraps
@@ -14,9 +15,12 @@ class BuiltInEventsTypes:
     ON_ENV_LOAD="on_env_load"
     ON_CONTEXT_LOAD="on_context_load"
 
+@dataclasses.dataclass
 class Event(object):
     def __init__(self, eventType,
-                 eventCallback, kwargs={}):
+                 eventCallback, kwargs=None):
+        if kwargs is None:
+            kwargs = {}
         self.eventType = eventType
         self.eventCallback: Callable = eventCallback
         self.kwargs = kwargs
