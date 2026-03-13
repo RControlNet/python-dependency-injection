@@ -1,25 +1,24 @@
 import logging
-import threading
+
+from concurrent.futures.thread import ThreadPoolExecutor
 from functools import wraps
-from multiprocessing import Queue
-from typing import Dict
+from typing import Dict, Callable, Optional
 import asyncio
 from cndi.annotations import Component, constructKeyWordArguments, ConditionalRendering
-from cndi.annotations.threads import ContextThreads
-from cndi.consts import RCN_ENABLE_STANDALONE_MESSAGE_BROKER, RCN_ENABLE_CONTEXT_THREADS
+from cndi.consts import RCN_EVENTS_ENABLE, RCN_EVENTS_NUM_THREADS
 from cndi.env import getContextEnvironment
 
 logger = logging.getLogger(__name__)
 
-
 class BuiltInEventsTypes:
     ON_ENV_LOAD="on_env_load"
+    ON_CONTEXT_LOAD="on_context_load"
 
 class Event(object):
     def __init__(self, eventType,
                  eventCallback, kwargs={}):
         self.eventType = eventType
-        self.eventCallback = eventCallback
+        self.eventCallback: Callable = eventCallback
         self.kwargs = kwargs
 
 REGISTERED_EVENTS: Dict[str, dict[str, Event]] = dict()
@@ -50,54 +49,24 @@ class EventNotFound(Exception):
         super().__init__( *args)
 
 @Component
-class EventExecutor:
-    def execute(self, event: str, required=True, **override_kwargs):
-        if event not in REGISTERED_EVENTS:
-            if required:
-                raise EventNotFound(f"{event} not found, please check the decorators")
-            else:
-                return None
+@ConditionalRendering(callback=lambda x: getContextEnvironment(RCN_EVENTS_ENABLE, defaultValue=False, castFunc=bool))
+class EventBus:
+    def __init__(self):
+        self._executor = ThreadPoolExecutor(max_workers=getContextEnvironment(RCN_EVENTS_NUM_THREADS, defaultValue=1, castFunc=int))
 
-        event_objs = REGISTERED_EVENTS.get(event)
-        response = dict()
-        for func_name, event_obj in event_objs.items():
-            logger.debug(f"Event call started on {func_name}")
+    def publish(self, event_name: str, data: dict = {}) -> None:
+        if event_name in REGISTERED_EVENTS:
+            for func_name, event  in REGISTERED_EVENTS[event_name].items():
+                kwargs = {
+                    **constructKeyWordArguments(event.kwargs, required=False),
+                    **data
+                }
+                kwargs = dict(map(lambda x: [x, kwargs[x]], set(event.kwargs.keys()).intersection(kwargs.keys())))
+                self._executor.submit(event.eventCallback, **kwargs)
+        else:
+            logger.warning(f"{event_name} event not found, please check the decorators")
 
-            kwargs = {
-                **constructKeyWordArguments(event_obj.kwargs, required=False),
-                **override_kwargs
-            }
-            kwargs = dict(map(lambda x: [x, kwargs[x]],set(event_obj.kwargs.keys()).intersection(kwargs.keys())))
-            response[func_name] = event_obj.eventCallback(**kwargs)
-            logger.debug(f"Event call completed on {func_name}")
-        return response
-
-_shared_queue = Queue()
-
-@Component
-@ConditionalRendering(callback=lambda x: getContextEnvironment(RCN_ENABLE_STANDALONE_MESSAGE_BROKER, defaultValue=False, castFunc=bool) and
-                getContextEnvironment(RCN_ENABLE_CONTEXT_THREADS, defaultValue=False, castFunc=bool)
-          )
-class Consumer(threading.Thread):
-    def __init__(self, eventExecutor: EventExecutor,
-                 contextThread: ContextThreads):
-        super().__init__()
-        self.eventExecutor = eventExecutor
-        self.start()
-        contextThread.add_thread(self)
-
-    def run(self):
-        while self.is_alive():
-            event_name = _shared_queue.get(block=True)
-            self.eventExecutor.execute(event_name)
-
-
-@Component
-@ConditionalRendering(callback=lambda x: getContextEnvironment(RCN_ENABLE_STANDALONE_MESSAGE_BROKER, defaultValue=False, castFunc=bool))
-class StandaloneEventBroker:
-    def __init__(self, consumer: Consumer):
-        self.data = dict()
-        self.consumer = consumer
-
-    def push_event(self, event_name):
-        _shared_queue.put(event_name)
+    def subscribe(self, event_name: str, event: Event) -> None:
+        if event_name not in REGISTERED_EVENTS:
+            REGISTERED_EVENTS[event_name] = dict()
+        REGISTERED_EVENTS[event_name][event.eventType] = event

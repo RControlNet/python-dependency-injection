@@ -2,11 +2,13 @@ import copy
 import importlib
 import os
 
+from cndi.annotations.events import EventBus, BuiltInEventsTypes
 from cndi.binders.message import DefaultMessageBinder
 import logging
 
 from cndi.annotations import beanStore, workOrder, beans, components, componentStore, autowires, getBeanObject, getBean, \
     validateBean, queryOverideBeanStore, validatedBeans, constructKeyWordArguments
+from cndi.consts import RCN_EVENTS_ENABLE
 from cndi.env import loadEnvFromFile, getContextEnvironment, reload_envs, getConfiguredProfile
 from cndi.exception import BeanNotFoundException
 from cndi.flask.flask_app import FlaskApplication
@@ -20,6 +22,10 @@ initializerComponents = [
     '.'.join([ManagementServer.__module__, ManagementServer.__name__]),
     '.'.join([FlaskApplication.__module__, FlaskApplication.__name__])
 ]
+
+def on_context_load(event_bus: EventBus):
+    event_bus.publish(BuiltInEventsTypes.ON_CONTEXT_LOAD)
+    logger.info("App Started Successfully")
 
 class AppInitializer:
     def __init__(self):
@@ -48,7 +54,7 @@ class AppInitializer:
         self.componentsPath.append(importModule)
 
 
-    def run(self, onComplete = lambda: logger.info("Start Up Complete")):
+    def run(self, onComplete = on_context_load):
         """
         Performing Dependency Injection, on priority basis
         Steps Involved in DI
@@ -133,5 +139,8 @@ class AppInitializer:
                 objectInstance = getBeanObject(componentName)
                 componentClass.func.run(objectInstance)
 
-        kwargs = constructKeyWordArguments(onComplete.__annotations__)
-        onComplete(**kwargs)
+        if onComplete is on_context_load and not getContextEnvironment(RCN_EVENTS_ENABLE, defaultValue=False, castFunc=bool):
+            logger.warning("Context Load Event is not published because Events is disable, please enable it by setting RCN_EVENTS_ENABLE to true")
+        else:
+            kwargs = constructKeyWordArguments(onComplete.__annotations__)
+            onComplete(**kwargs)
