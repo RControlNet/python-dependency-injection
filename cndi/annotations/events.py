@@ -49,12 +49,15 @@ class EventNotFound(Exception):
         super().__init__( *args)
 
 @Component
-@ConditionalRendering(callback=lambda x: getContextEnvironment(RCN_EVENTS_ENABLE, defaultValue=False, castFunc=bool))
+@ConditionalRendering(callback=lambda x: getContextEnvironment(RCN_EVENTS_ENABLE, defaultValue=False, castFunc=bool)
+                            and getContextEnvironment(RCN_EVENTS_NUM_THREADS, defaultValue=1, castFunc=int) > 0)
 class EventBus:
     def __init__(self):
         self._executor = ThreadPoolExecutor(max_workers=getContextEnvironment(RCN_EVENTS_NUM_THREADS, defaultValue=1, castFunc=int))
 
-    def publish(self, event_name: str, data: dict = {}) -> None:
+    def publish(self, event_name: str, data=None) -> None:
+        if data is None:
+            data = {}
         if event_name in REGISTERED_EVENTS:
             for func_name, event  in REGISTERED_EVENTS[event_name].items():
                 kwargs = {
