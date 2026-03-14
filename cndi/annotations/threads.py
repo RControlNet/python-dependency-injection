@@ -12,7 +12,7 @@ def isContextThreadEnable(dependent):
     enabled = getContextEnvironment(RCN_ENABLE_CONTEXT_THREADS, defaultValue=False, castFunc=bool)
     if not enabled:
         log.warning(f"{dependent} Component depends on {__name__}.{ContextThreads.__name__}")
-        log.warning(f"Context Threads is disable in property please enable it by setting {RCN_ENABLE_CONTEXT_THREADS} to true")
+        log.warning(f"SingletonContext Threads is disable in property please enable it by setting {RCN_ENABLE_CONTEXT_THREADS} to true")
 
     return enabled
 

@@ -3,6 +3,7 @@ import unittest
 from cndi.annotations import Component, Bean, Autowired
 from cndi.env import VARS
 from cndi.initializers import AppInitializer
+from cndi.tests import test_with_context
 from test_module.TestBean import TestBean
 
 
@@ -29,16 +30,9 @@ class SecondTestClass:
 class TestComponents(unittest.TestCase):
     def setUp(self) -> None:
         VARS.clear()
-        self.store = dict()
 
-    def testComponents(self):
-        @Autowired()
-        def setComponent(secondComponent: SecondTestClass, bean: TestBean):
-            self.store['component'] = secondComponent
-            self.store['bean'] = bean
-
-        appInitializer = AppInitializer()
-        appInitializer.run()
-
-        self.assertTrue(self.store['component'].firstComponent.triggered)
-        self.assertIsNotNone(self.store['component'].testBean)
+    @test_with_context
+    def testComponents(self, firstComponent: FirstComponent, secondComponent: SecondTestClass, testBean: TestBean):
+        self.assertTrue(firstComponent.triggered)
+        self.assertIsNotNone(testBean)
+        self.assertIsNotNone(secondComponent.firstComponent)

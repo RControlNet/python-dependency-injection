@@ -1,21 +1,14 @@
 import unittest
-
-from cndi.annotations import Autowired
-from cndi.initializers import AppInitializer
+from cndi.annotations import Bean
+from cndi.tests import test_with_context
 from test_module.TestBean import TestBean
 
+@Bean()
+def getTestBean() -> TestBean:
+    return TestBean("Hello")
 
 class AppInitializerTest(unittest.TestCase):
-    def testComponentScanAndDI(self):
-        @Autowired()
-        def setTestBean(bean: TestBean):
-            global testBean
-            print(bean)
-            testBean = bean
-
-        app = AppInitializer()
-        app.componentScan("test_module")
-
-        app.run()
-        self.assertEqual(testBean.name, "Test 123")
-        self.assertIsInstance(testBean, TestBean)
+    @test_with_context
+    def testComponentScanAndDI(self, testBean: TestBean):
+        self.assertIsNotNone(testBean)
+        self.assertEqual(testBean.name, "Hello")

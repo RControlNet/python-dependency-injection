@@ -21,6 +21,7 @@ Functions:
 
 import logging
 import os
+from typing import Callable
 
 from cndi.annotations.component import ComponentClass
 from cndi.env import RCN_ACTIVE_PROFILE
@@ -28,15 +29,25 @@ from cndi.exception import BeanNotFoundException
 
 logger = logging.getLogger("cndi.annotations")
 
-validatedBeans = list()
-beans = list()
-autowires = list()
-components = list()
-beanStore = dict()
-componentStore = dict()
-profilesStores = dict()
-conditionalRender = dict()
-overrideStore = dict()
+class SingletonContext:
+    """Singleton context manager for storing beans, components, and related data."""
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(SingletonContext, cls).__new__(cls)
+            cls._instance.validatedBeans = []
+            cls._instance.beans = []
+            cls._instance.autowires = []
+            cls._instance.components = []
+            cls._instance.beanStore = {}
+            cls._instance.componentStore = {}
+            cls._instance.profilesStores = {}
+            cls._instance.conditionalRender = {}
+            cls._instance.overrideStore = {}
+        return cls._instance
+
+context = SingletonContext()
 
 from functools import wraps
 import importlib
@@ -72,31 +83,29 @@ def getBeanObject(objectType):
         objectType = normaliseModuleAndClassName('.'.join([objectType.__module__, objectType.__name__]))
     bean = queryBeanStorage(objectType)
     objectInstance = bean['objectInstance']
-    # if (objectInstance.__class__.__name__ == "function"):
-    #     args[key] = objectInstance()
-    # else:
     return copy.deepcopy(objectInstance) if bean['newInstance'] else objectInstance
 
 
 def queryBeanStorage(fullname):
     objectType = normaliseModuleAndClassName(fullname)
-    bean = beanStore[objectType]
+    bean = context.beanStore[objectType]
     return bean
 
 
 class AutowiredClass:
-    def __init__(self, required, func, kwargs: dict()):
+    def __init__(self, required, func, kwargs: dict):
         self.fullname = '.'.join([func.__qualname__])
         self.className = normaliseModuleAndClassName('.'.join(func.__qualname__.split(".")[:-1]))
         self.func = func
         self.kwargs = kwargs
         self.required = required
+        self.context = SingletonContext()
 
     def dependencyInject(self):
         dependencies = self.calculateDependencies()
         dependencyNotFound = list()
         for dependency in dependencies:
-            if dependency not in beanStore:
+            if dependency not in self.context.beanStore:
                 dependencyNotFound.append(dependency)
 
         if len(dependencyNotFound) > 0:
@@ -108,11 +117,11 @@ class AutowiredClass:
         args = dict()
         for (key, value) in kwargs.items():
             fullName = normaliseModuleAndClassName('.'.join([value.__module__, value.__name__]))
-            if fullName in beanStore:
+            if fullName in self.context.beanStore:
                 args[key] = getBeanObject(fullName)
 
-        if self.className in beanStore:
-            self.func(beanStore[self.className], **args)
+        if self.className in self.context.beanStore:
+            self.func(self.context.beanStore[self.className], **args)
         else:
             logger.debug(f"{self.className} {self.fullname}")
             self.func(**args)
@@ -138,7 +147,7 @@ def OverrideBeanType(type: object):
 
         fullname = '.'.join([wrapper.__module__, wrapper.__name__])
 
-        overrideStore[fullname] = {
+        context.overrideStore[fullname] = {
             "func": wrapper,
             "overrideType": type
         }
@@ -148,8 +157,8 @@ def OverrideBeanType(type: object):
 
 
 def queryOverideBeanStore(fullname):
-    if fullname in overrideStore:
-        return overrideStore[fullname]
+    if fullname in context.overrideStore:
+        return context.overrideStore[fullname]
     else:
         return None
 
@@ -173,11 +182,11 @@ def Component(func: object):
     moduleName = wrapper.__module__[:-9] if wrapper.__module__.endswith(".__init__") else wrapper.__module__
     componentFullName = '.'.join([moduleName, wrapper.__qualname__])
     logger.debug(f"Registering Function name " + componentFullName)
-    duplicateComponents = list(filter(lambda component: component.fullname == componentFullName, components))
+    duplicateComponents = list(filter(lambda component: component.fullname == componentFullName, context.components))
     if duplicateComponents.__len__() > 0:
         logger.debug(f"Duplicate Component found for: {duplicateComponents}")
     else:
-        components.append(ComponentClass(**{
+        context.components.append(ComponentClass(**{
             'fullname': componentFullName,
             'func': wrapper,
             'annotations': wrapper.__init__.__annotations__ if "__annotations__" in dir(wrapper.__init__) else {}
@@ -237,13 +246,13 @@ def Bean(newInstance=False):
             map(lambda key: (key, '.'.join([annotations[key].__module__, annotations[key].__qualname__])), annotations))
 
         if validateBean(fullname):
-            beans.append({
+            context.beans.append({
                 'name': fullname,
                 'newInstance': newInstance,
                 'object': wrapper,
                 'fullname': wrapper.__qualname__,
                 'kwargs': annotations,
-                'index': len(beans)
+                'index': len(context.beans)
             })
 
             return wrapper
@@ -273,7 +282,7 @@ def ConditionalRendering(callback=lambda method: True, overrideFullName = None):
 
         fullname = ".".join([wrapper.__module__, wrapper.__qualname__]) if overrideFullName is None else overrideFullName
 
-        conditionalRender[fullname] = {
+        context.conditionalRender[fullname] = {
             "func": wrapper,
             "callback": callback
         }
@@ -284,8 +293,8 @@ def ConditionalRendering(callback=lambda method: True, overrideFullName = None):
 
 
 def queryContitionalRenderingStore(fullname):
-    if fullname in conditionalRender:
-        return conditionalRender[fullname]
+    if fullname in context.conditionalRender:
+        return context.conditionalRender[fullname]
     else:
         return None
 
@@ -293,10 +302,10 @@ def constructKeyWordArguments(annotations, required=True):
     kwargs = dict()
     for key, classObject in annotations.items():
         beanName = f"{classObject.__module__}.{classObject.__name__}"
-        if beanName in beanStore:
+        if beanName in context.beanStore:
             kwargs[key] = getBeanObject(beanName)
         elif required:
-            raise BeanNotFoundException(f"Following Bean failed to load in Context: "+beanName)
+            raise BeanNotFoundException(f"Following Bean failed to load in SingletonContext: "+beanName)
         else:
             logger.warn(f"Bean not found {beanName} and required is set to false")
     return kwargs
@@ -308,13 +317,13 @@ def Profile(profiles=["default"]):
     :return:
     """
 
-    def inner_function(func: object):
+    def inner_function(func: Callable):
         @wraps(func)
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
 
         fullname = ".".join([wrapper.__module__, wrapper.__qualname__])
-        profilesStores[fullname] = {
+        context.profilesStores[fullname] = {
             "func": wrapper,
             "profiles": profiles
         }
@@ -325,8 +334,8 @@ def Profile(profiles=["default"]):
 
 
 def queryProfileData(fullname):
-    if fullname in profilesStores:
-        return profilesStores.get(fullname)
+    if fullname in context.profilesStores:
+        return context.profilesStores.get(fullname)
     else:
         return None
 
@@ -345,7 +354,7 @@ def Autowired(required=True):
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
 
-        autowires.append(AutowiredClass(required=required, **{
+        context.autowires.append(AutowiredClass(required=required, **{
             'kwargs': annotations,
             'func': wrapper
         }))

@@ -16,7 +16,7 @@ def complete(flaskApp: FlaskApplication):
 if __name__ == '__main__':
     addToOsEnviron("app.flask.enabled", "true")                     # Enable Flask App
     addToOsEnviron("rcn.management.server.enabled", "true")         # Enable Management and Health Endpoint
-    addToOsEnviron("management.context.thread.enable", "true")      # Enable Context Thread
+    addToOsEnviron("management.context.thread.enable", "true")      # Enable SingletonContext Thread
 
 
     app = AppInitializer()

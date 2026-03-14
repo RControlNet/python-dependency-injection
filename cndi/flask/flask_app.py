@@ -81,7 +81,7 @@ class FlaskApplication:
         self.__app.register_blueprint(self.app, url_prefix=self.contextUrl)
 
         backend = getContextEnvironment(RCN_FLASK_APP_BACKEND_SERVER, defaultValue="werkzeug")
-        logger.info(f"Starting Flask Server at {self.host}:{self.port} at Context URL: {self.contextUrl} on Backend {backend}")
+        logger.info(f"Starting Flask Server at {self.host}:{self.port} at SingletonContext URL: {self.contextUrl} on Backend {backend}")
 
         if backend == "werkzeug":
             from werkzeug import run_simple

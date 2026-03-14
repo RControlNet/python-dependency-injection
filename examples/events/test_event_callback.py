@@ -24,7 +24,7 @@ def on_load_3():
 
 @OnEvent(BuiltInEventsTypes.ON_CONTEXT_LOAD)
 def on_context_load():
-    print("Context Loaded")
+    print("SingletonContext Loaded")
 
 @Autowired()
 def setEventExecutor(eventBus: EventBus):
