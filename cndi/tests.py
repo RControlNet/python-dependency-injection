@@ -12,7 +12,7 @@ def test_with_context(test_func: Callable):
     def wrapper(self, *args, **kwargs):
         # Initialize the singleton Context instance
         app = AppInitializer()
-        app.run()
+        app.run(freeze=False)
 
         constructed_kwargs = constructKeyWordArguments(test_func.__annotations__)
         # Run the test

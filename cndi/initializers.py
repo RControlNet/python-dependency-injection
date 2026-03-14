@@ -51,7 +51,7 @@ class AppInitializer:
         importModule = importlib.import_module(module)
         self.componentsPath.append(importModule)
 
-    def run(self, onComplete = on_context_load):
+    def run(self, onComplete = on_context_load, freeze=True):
         """
         Performing Dependency Injection, on priority basis
         Steps Involved in DI
@@ -117,7 +117,8 @@ class AppInitializer:
                                                  object=objectInstance, index=0, newInstance=False,
                                                  fullname=component.func.__name__, kwargs=kwargs)
 
-        self.context.freeze()
+        if freeze:
+            self.context.freeze()
 
         messageBinderEnabled = getContextEnvironment("rcn.binders.message.enable", defaultValue=False, castFunc=bool)
         defaultMessageBinder = None

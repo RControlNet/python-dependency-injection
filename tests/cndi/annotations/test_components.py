@@ -1,8 +1,8 @@
+import pytest
 import unittest
 
 from cndi.annotations import Component, Bean, Autowired
 from cndi.env import VARS
-from cndi.initializers import AppInitializer
 from cndi.tests import test_with_context
 from test_module.TestBean import TestBean
 
