@@ -21,7 +21,8 @@ Functions:
 
 import logging
 import os
-from typing import Callable
+import types
+from typing import Callable, Any
 
 from cndi.annotations.component import ComponentClass
 from cndi.env import RCN_ACTIVE_PROFILE
@@ -32,6 +33,7 @@ logger = logging.getLogger("cndi.annotations")
 class SingletonContext:
     """Singleton context manager for storing beans, components, and related data."""
     _instance = None
+    _frozen = False
 
     def __new__(cls):
         if cls._instance is None:
@@ -46,6 +48,24 @@ class SingletonContext:
             cls._instance.conditionalRender = {}
             cls._instance.overrideStore = {}
         return cls._instance
+
+    def freeze(self):
+        """Freeze the context to make all stored values immutable."""
+        self.validatedBeans = tuple(self.validatedBeans)
+        self.beans = tuple(self.beans)
+        self.autowires = tuple(self.autowires)
+        self.components = tuple(self.components)
+        self.beanStore = types.MappingProxyType(self.beanStore)
+        self.componentStore = types.MappingProxyType(self.componentStore)
+        self.profilesStores = types.MappingProxyType(self.profilesStores)
+        self.conditionalRender = types.MappingProxyType(self.conditionalRender)
+        self.overrideStore = types.MappingProxyType(self.overrideStore)
+        SingletonContext._frozen = True
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if SingletonContext._frozen:
+            raise AttributeError(f"Cannot modify frozen context attribute: {name}")
+        super().__setattr__(name, value)
 
 context = SingletonContext()
 
