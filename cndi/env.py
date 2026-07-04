@@ -25,7 +25,6 @@ if RCN_ACTIVE_PROFILE not in os.environ:
 VARS = dict()
 
 def reload_envs():
-    VARS.clear()
     VARS.update(tuple(map(lambda key: (key, os.environ[key]),
              filter(lambda key: key.startswith(RCN_ENVS_CONFIG), os.environ))))
 
