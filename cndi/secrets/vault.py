@@ -1,7 +1,7 @@
 import logging
 import os
 
-from cndi.annotations import Component, ConditionalRendering
+from cndi.annotations import Component, ConditionalRendering, Bean
 from cndi.autoconfiguration.configure import AutoConfigurationProviders
 from cndi.consts import RCN_ENABLE_VAULT_PROVIDER
 from cndi.env import getContextEnvironment, getContextEnvironments, RCN_ENVS_CONFIG, \
@@ -10,8 +10,7 @@ from cndi.env import getContextEnvironment, getContextEnvironments, RCN_ENVS_CON
 logger = logging.getLogger(__name__)
 VAULT_PROVIDER_PREFIX = "vault://"
 
-@Component
-@ConditionalRendering(callback=lambda x: getContextEnvironment(RCN_ENABLE_VAULT_PROVIDER, defaultValue=False, castFunc=bool))
+
 class VaultSecretProvider:
     def __init__(self):
         try:
@@ -44,3 +43,8 @@ class VaultSecretProvider:
                 os.environ[RCN_ENVS_CONFIG + '.' + key] = value
             else:
                 logger.warning(f"Secret not found at path: {mount_point}")
+
+@Bean()
+@ConditionalRendering(callback=lambda x: getContextEnvironment(RCN_ENABLE_VAULT_PROVIDER, defaultValue=False, castFunc=bool))
+def getVaultProvider() -> VaultSecretProvider:
+    return VaultSecretProvider()
