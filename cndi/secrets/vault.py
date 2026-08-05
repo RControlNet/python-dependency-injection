@@ -10,7 +10,6 @@ from cndi.env import getContextEnvironment, getContextEnvironments, RCN_ENVS_CON
 logger = logging.getLogger(__name__)
 VAULT_PROVIDER_PREFIX = "vault://"
 
-
 class VaultSecretProvider:
     def __init__(self):
         try:
