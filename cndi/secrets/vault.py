@@ -20,6 +20,7 @@ class VaultSecretProvider:
             client = hvac.Client(url=vault_addr, token=vault_token)
             if client.is_authenticated():
                 for key, value in getContextEnvironments().items():
+                    logger.debug(f"Resolving secret for key: {key}, value: {value}")
                     self.resolve(key, value, client)
                 reload_envs()
             else:
