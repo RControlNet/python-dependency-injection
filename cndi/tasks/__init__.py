@@ -55,6 +55,13 @@ class TaskExecutor(threading.Thread):
         if name in self.tasks:
             del self.tasks[name]
 
+    def stop(self):
+        """
+        Cooperatively stops the executor's run loop, allowing ContextThreads to
+        gracefully shut this thread down.
+        """
+        self.running = False
+
     def execute(self, id: str, *args, **kwargs):
         if id in self.tasks:
             return self.tasks[id].callback(*args, **kwargs)
